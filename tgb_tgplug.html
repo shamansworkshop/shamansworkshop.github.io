@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGPlugs Developer Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 50%, #3a7bd5 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(33, 147, 176, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 25s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            left: -15%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(109, 213, 237, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 30s ease-in-out infinite reverse;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(40px) translateX(30px); }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+            animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: rgba(33, 147, 176, 0.25);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '⚡';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            top: -50px;
+            right: -30px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        header h1 {
+            font-size: 3.2em;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            font-weight: 300;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2em;
+            margin-bottom: 25px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+            padding-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        h3 {
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 1.4em;
+            margin: 30px 0 15px 0;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        p {
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.05em;
+            margin-bottom: 15px;
+        }
+
+        ul, ol {
+            margin: 15px 0 15px 30px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        li {
+            margin-bottom: 12px;
+            padding-left: 5px;
+            line-height: 1.7;
+        }
+
+        li strong {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            color: #e8eaed;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid rgba(33, 147, 176, 0.7);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: rgba(33, 147, 176, 0.6);
+            backdrop-filter: blur(5px);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background: rgba(33, 150, 243, 0.15);
+            border: 2px solid rgba(33, 150, 243, 0.4);
+            border-left: 5px solid rgba(33, 150, 243, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-box h3 {
+            color: rgba(255, 255, 255, 0.95);
+            margin-top: 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.15);
+            border: 2px solid rgba(255, 152, 0, 0.4);
+            border-left: 5px solid rgba(255, 152, 0, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .warning-box h3 {
+            color: rgba(255, 255, 255, 0.95);
+            margin-top: 0;
+        }
+
+        .success-box {
+            background: rgba(76, 175, 80, 0.15);
+            border: 2px solid rgba(76, 175, 80, 0.4);
+            border-left: 5px solid rgba(76, 175, 80, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .success-box h3 {
+            color: rgba(255, 255, 255, 0.95);
+            margin-top: 0;
+        }
+
+        .new-badge {
+            display: inline-block;
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid rgba(255, 193, 7, 0.6);
+            color: rgba(255, 255, 255, 0.95);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
+            margin-left: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .file-structure {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            border: 2px dashed rgba(33, 147, 176, 0.5);
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+
+        .api-method {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .api-method:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(33, 147, 176, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .api-method code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3px 8px;
+            border-radius: 6px;
+            color: #ffc107;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .best-practice {
+            display: flex;
+            align-items: start;
+            margin: 15px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .best-practice:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(5px);
+        }
+
+        .best-practice-num {
+            background: rgba(33, 147, 176, 0.6);
+            backdrop-filter: blur(5px);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 1.1em;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .troubleshoot-item {
+            background: rgba(255, 107, 107, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 18px;
+            margin: 10px 0;
+            border-radius: 12px;
+            border-left: 4px solid rgba(255, 107, 107, 0.7);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .troubleshoot-item strong {
+            color: rgba(255, 255, 255, 0.95);
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            padding: 30px 40px;
+            font-size: 0.95em;
+        }
+
+        footer strong {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            header h1 {
+                font-size: 2.2em;
+            }
+
+            .content {
+                padding: 30px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ TGPlugs Developer Guide</h1>
+            <p>Create Powerful Mods for TGBrowser</p>
+        </header>
+
+        <div class="content">
+            <div class="section">
+                <h2>🚀 What Are TGPlugs?</h2>
+                <p>TGPlugs are modular extensions for TGBrowser that unlock endless possibilities:</p>
+                <ul>
+                    <li>🎨 <strong>Modify appearance</strong> with custom CSS skins (style.css)</li>
+                    <li>⚙️ <strong>Add functionality</strong> with JavaScript (main.js)</li>
+                    <li>🔗 <strong>Register with TGMoLink API</strong> for enhanced integration</li>
+                    <li>💬 <strong>Communicate with other mods</strong> seamlessly</li>
+                    <li>🆔 <strong>Unique identification system</strong> with TGUID validation</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>✨ What's New in Beta 5? <span class="new-badge">v26.01.07a+</span></h2>
+                <div class="success-box">
+                    <h3>🔐 Enhanced Security & Validation</h3>
+                    <ul>
+                        <li><strong>TGUID System:</strong> All TGPlugs MUST register with a unique identifier (e.g., <code>com.shaman.darktheme</code>)</li>
+                        <li><strong>Gatekeeper Protection:</strong> Mods without valid TGUID registration trigger security warnings</li>
+                        <li><strong>Duplicate Prevention:</strong> The system prevents duplicate mod registration</li>
+                        <li><strong>Real-time Validation:</strong> Immediate feedback on mod loading success/failure</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3>🎯 Improved Loading System</h3>
+                    <ul>
+                        <li><strong>Smart Path Resolution:</strong> Load by TGUID, folder name, or full path</li>
+                        <li><strong>Status Tracking:</strong> Visual indicators show active TGPlugs count</li>
+                        <li><strong>Better Error Messages:</strong> Clear feedback when mods fail to load</li>
+                        <li><strong>Manual Loader:</strong> UI-based mod injection via TGPanel</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h3>⚠️ Breaking Changes from Earlier Versions</h3>
+                    <p><strong>CRITICAL:</strong> TGPlugs created for versions before Beta 5 MUST be updated to include proper TGUID registration, or they will trigger security warnings!</p>
+                    <p>Old mods without <code>window.TGMoLink.register("your.unique.id")</code> will still load BUT will be flagged as potentially unsafe.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📁 File Structure <span class="new-badge">Updated</span></h2>
+                <p>A proper TGPlug follows this structure:</p>
+                
+                <div class="file-structure">
+ModsPort-TGMod/<br>
+└── YourModFolder/ (or use TGUID as folder name)<br>
+    ├── style.css       (optional, visual modifications)<br>
+    └── main.js         (required, MUST call register())<br>
+                </div>
+
+                <p><strong>Naming Convention:</strong></p>
+                <ul>
+                    <li>✅ Use your TGUID as the folder name (e.g., <code>com.shaman.darktheme/</code>)</li>
+                    <li>✅ Or use a simple name (e.g., <code>DarkTheme/</code>) but register with full TGUID in code</li>
+                    <li>❌ Avoid spaces or special characters in folder names</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>🆔 Understanding TGUID (TGMoLink Unique ID) <span class="new-badge">Beta 5</span></h2>
+                
+                <h3>What is a TGUID?</h3>
+                <p>A TGUID is a reverse-domain identifier that ensures your mod is unique and traceable. Think of it like Android package names or iOS bundle identifiers!</p>
+
+                <div class="info-box">
+                    <h3>TGUID Format Rules</h3>
+                    <ul>
+                        <li><strong>Pattern:</strong> <code>domain.creator.modname</code></li>
+                        <li><strong>Requirements:</strong> Must contain at least one dot (<code>.</code>)</li>
+                        <li><strong>Allowed Characters:</strong> Lowercase letters, numbers, dots, hyphens, underscores</li>
+                        <li><strong>No Spaces:</strong> Never include spaces in your TGUID</li>
+                        <li><strong>Case Insensitive:</strong> But lowercase is recommended</li>
+                    </ul>
+                </div>
+
+                <h3>TGUID Examples</h3>
+                <div class="code-block" data-lang="text">
+<pre>✅ VALID TGUIDs:
+com.shaman.darktheme
+io.github.username.weatherwidget
+net.example.bookmarkexporter
+dev.myname.matrixmode
+studio.creative.glassmorphism
+
+❌ INVALID TGUIDs:
+darktheme              (no dot separator)
+my mod name            (contains spaces)
+com.shaman             (too short, needs specific mod name)
+.com.shaman.mod        (starts with dot)
+com..shaman.mod        (consecutive dots)</pre>
+                </div>
+
+                <h3>How to Choose Your TGUID</h3>
+                <ol>
+                    <li><strong>Start with your domain:</strong> If you have a website, use it reversed (e.g., <code>com.yoursite</code>)</li>
+                    <li><strong>Add your username:</strong> Use your GitHub, social media, or online handle</li>
+                    <li><strong>End with mod name:</strong> Descriptive name for your specific mod</li>
+                    <li><strong>Examples:</strong>
+                        <ul>
+                            <li>GitHub user "cooldeveloper" making "NightMode" → <code>io.github.cooldeveloper.nightmode</code></li>
+                            <li>Person named "Alex" making "WeatherBar" → <code>dev.alex.weatherbar</code></li>
+                            <li>Studio "PixelCraft" making "AnimatedUI" → <code>studio.pixelcraft.animatedui</code></li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+
+            <div class="section">
+                <h2>📝 Basic TGPlug Template <span class="new-badge">Beta 5 Compatible</span></h2>
+                
+                <h3>style.css - Dark Theme Example</h3>
+                <div class="code-block" data-lang="css">
+<pre>/* TGPlug: Midnight Theme
+ * TGUID: com.shaman.midnighttheme
+ * Version: 1.0
+ */
+
+:root {
+    --primary: #6366f1; 
+    --primary-hover: #4f46e5;
+    --accent: #ec4899; 
+}
+
+body.dark-mode {
+    --bg: #0f0f1e;
+    --toolbar-bg: rgba(20, 20, 40, 0.85);
+    --text: #e0e0ff;
+    --border: #2d2d4d;
+}
+
+/* Smooth transitions for theme changes */
+.toolbar, .menu-content {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom accent glow */
+button:hover {
+    box-shadow: 0 0 15px var(--primary);
+}</pre>
+                </div>
+
+                <h3>main.js - Complete Registration Example <span class="new-badge">Required!</span></h3>
+                <div class="code-block" data-lang="javascript">
+<pre>// TGPlug: Midnight Theme
+// TGUID: com.shaman.midnighttheme
+// Description: A beautiful dark theme with purple accents
+
+(function() {
+    'use strict';
+    
+    // CRITICAL: Define your TGUID constant
+    const MOD_ID = 'com.shaman.midnighttheme';
+    
+    // BEST PRACTICE: Check if TGMoLink API exists before registering
+    if (window.TGMoLink && window.TGMoLink.register) {
+        window.TGMoLink.register(MOD_ID);
+        console.log(`[${MOD_ID}] Successfully registered!`);
+        
+        // Initialize your mod features
+        initializePlugin();
+    } else {
+        // Fallback: Wait for API to load
+        const initCheck = setInterval(() => {
+            if (window.TGMoLink && window.TGMoLink.register) {
+                clearInterval(initCheck);
+                window.TGMoLink.register(MOD_ID);
+                console.log(`[${MOD_ID}] Successfully registered!`);
+                initializePlugin();
+            }
+        }, 100);
+    }
+
+    function initializePlugin() {
+        // Announce your presence
+        window.TGMoLink.broadcast('Midnight Theme activated', MOD_ID);
+        
+        // Apply your mod features
+        applyThemeEnhancements();
+    }
+
+    function applyThemeEnhancements() {
+        // Your mod functionality here
+        console.log('🌙 Midnight Theme is now active');
+        
+        // Example: Add custom elements
+        const badge = document.createElement('div');
+        badge.style.cssText = `
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(99, 102, 241, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        `;
+        badge.textContent = '🌙 Midnight Theme';
+        document.body.appendChild(badge);
+        
+        // Remove badge after 3 seconds
+        setTimeout(() => badge.remove(), 3000);
+    }
+})();</pre>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>⚠️ Why Check for API Existence?</h3>
+                    <p>Always use <code>if (window.TGMoLink && window.TGMoLink.register)</code> before calling registration! This:</p>
+                    <ul>
+                        <li>✅ Prevents errors if TGMoLink isn't loaded yet</li>
+                        <li>✅ Ensures compatibility across TGBrowser versions</li>
+                        <li>✅ Provides graceful degradation</li>
+                        <li>✅ Makes your mod more robust and professional</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔌 TGMoLink API Reference <span class="new-badge">v3-secure</span></h2>
+                <p>The TGMoLink API provides essential methods for mod integration:</p>
+
+                <div class="api-method">
+                    <h3>📝 Registration (REQUIRED)</h3>
+                    <div class="code-block" data-lang="javascript">
+<pre>// RECOMMENDED METHOD: Check API existence first
+const MOD_ID = "com.yourname.modname";
+
+if (window.TGMoLink && window.TGMoLink.register) {
+    window.TGMoLink.register(MOD_ID);
+}
+
+// Returns: true if successful, false if invalid TGUID
+// Always check if the register method exists to prevent errors!</pre>
+                    </div>
+                    <p><strong>New in Beta 5:</strong> Registration is now enforced with TGUID validation. Invalid or missing registration triggers security warnings in the status bar.</p>
+                    <p><strong>⚡ Pro Tip:</strong> Always validate that <code>window.TGMoLink.register</code> exists before calling it. This makes your mod more robust and prevents crashes!</p>
+                </div>
+
+                <div class="api-method">
+                    <h3>📡 Broadcasting Messages</h3>
+                    <div class="code-block" data-lang="javascript">
+<pre>// Send a message to other TGPlugs
+window.TGMoLink.broadcast("Message content", "YourTGUID");
+
+// Example uses:
+window.TGMoLink.broadcast("Theme changed to dark mode", "com.shaman.theme");
+window.TGMoLink.broadcast(JSON.stringify({action: 'update', data: 123}), "com.dev.mod");</pre>
+                    </div>
+                </div>
+
+                <div class="api-method">
+                    <h3>👂 Listening to Messages</h3>
+                    <div class="code-block" data-lang="javascript">
+<pre>// Listen for broadcasts from other TGPlugs
+document.addEventListener('TGMoLinkMessage', (event) => {
+    console.log('Sender:', event.detail.sender);
+    console.log('Message:', event.detail.message);
+    
+    // Filter by sender
+    if (event.detail.sender === 'com.other.mod') {
+        // Handle message from specific mod
+    }
+});</pre>
+                    </div>
+                </div>
+
+                <div class="api-method">
+                    <h3>🔍 Checking API Properties</h3>
+                    <div class="code-block" data-lang="javascript">
+<pre>// Check API version
+console.log(window.TGMoLink.version); // "v3-secure"
+
+// Get list of registered TGUIDs
+console.log(window.TGMoLink.plugs); // Array of all registered TGUIDs</pre>
+                    </div>
+                </div>
+
+                <div class="api-method">
+                    <h3>🎨 UI Integration</h3>
+                    <div class="code-block" data-lang="javascript">
+<pre>// Access browser elements safely
+const addressBar = document.getElementById('address');
+const toolbar = document.querySelector('.toolbar');
+const menuContent = document.getElementById('menuContent');
+
+// Example: Add custom button to toolbar
+function addCustomButton() {
+    const btn = document.createElement('button');
+    btn.title = 'My Feature';
+    btn.innerHTML = '⭐';
+    btn.onclick = () => alert('Feature activated!');
+    toolbar.appendChild(btn);
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📦 Loading Your TGPlug <span class="new-badge">Beta 5</span></h2>
+                
+                <h3>Method 1: Via TGPanel UI</h3>
+                <ol>
+                    <li>Place your mod folder in <code>../ModsPort-TGMod/YourModFolder/</code></li>
+                    <li>Open TGBrowser and click the TGPanel menu (three dots)</li>
+                    <li>Scroll to "Load TGPlug (Mod)" section</li>
+                    <li>Enter either:
+                        <ul>
+                            <li>Your TGUID: <code>com.shaman.mymod</code></li>
+                            <li>Folder name: <code>MyModFolder</code></li>
+                            <li>Full path: <code>../ModsPort-TGMod/MyModFolder</code></li>
+                        </ul>
+                    </li>
+                    <li>Click the <code>+</code> button to load</li>
+                </ol>
+
+                <h3>Method 2: Programmatic Loading</h3>
+                <div class="code-block" data-lang="javascript">
+<pre>// Load by TGUID (Beta 5 detects if it looks like an ID)
+window.TGMoLink.inject('com.shaman.mymod');
+
+// Load by folder name
+window.TGMoLink.inject('MyModFolder');
+
+// Load by full path
+window.TGMoLink.inject('../ModsPort-TGMod/MyModFolder/');</pre>
+                </div>
+
+                <div class="warning-box">
+                    <h3>⚠️ Loading Behavior in Beta 5</h3>
+                    <p>After loading, the system checks if your mod called <code>register()</code> with a valid TGUID:</p>
+                    <ul>
+                        <li><strong>✅ Valid Registration:</strong> Status shows "Loaded TGPlug: [your TGUID]"</li>
+                        <li><strong>❌ Missing Registration:</strong> Status shows security warning in red</li>
+                        <li><strong>📊 Plug Count:</strong> Bottom of TGPanel shows active plug count</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>✨ Best Practices for TGPlug Development</h2>
+
+                <div class="best-practice">
+                    <div class="best-practice-num">1</div>
+                    <div>
+                        <h3>Always Register with a Valid TGUID <span class="new-badge">Critical!</span></h3>
+                        <div class="code-block" data-lang="javascript">
+<pre>// RECOMMENDED: Safe registration method (checks if API exists)
+const MOD_ID = "com.shaman.yourmod";
+
+if (window.TGMoLink && window.TGMoLink.register) {
+    window.TGMoLink.register(MOD_ID);
+}
+
+// ALTERNATIVE: Wait for API to load
+const TGUID = 'com.yourname.yourmod';
+const check = setInterval(() => {
+    if (window.TGMoLink) {
+        clearInterval(check);
+        window.TGMoLink.register(TGUID);
+    }
+}, 100);</pre>
+                        </div>
+                        <p><strong>⚠️ CRITICAL:</strong> Always check if <code>window.TGMoLink.register</code> exists before calling it! This prevents errors and ensures compatibility. Without proper registration, your mod will trigger security warnings!</p>
+                    </div>
+                </div>
+
+                <div class="best-practice">
+                    <div class="best-practice-num">2</div>
+                    <div>
+                        <h3>Namespace Your Code Properly</h3>
+                        <div class="code-block" data-lang="javascript">
+<pre>// Use IIFE to avoid global pollution
+(function() {
+    'use strict';
+    
+    const MY_PLUGIN = {
+        tguid: 'com.example.myplugin',
+        version: '1.0.0',
+        
+        init: function() {
+            window.TGMoLink.register(this.tguid);
+            this.setupFeatures();
+        },
+        
+        setupFeatures: function() {
+            // Your code here
+        }
+    };
+    
+    // Wait for TGMoLink then initialize
+    const check = setInterval(() => {
+        if (window.TGMoLink) {
+            clearInterval(check);
+            MY_PLUGIN.init();
+        }
+    }, 100);
+})();</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="best-practice">
+                    <div class="best-practice-num">3</div>
+                    <div>
+                        <h3>Graceful Degradation & Error Handling</h3>
+                        <div class="code-block" data-lang="javascript">
+<pre>// Always check for features before using them
+if (typeof localStorage !== 'undefined') {
+    const data = localStorage.getItem('myData');
+}
+
+// Provide fallbacks
+const bookmarks = JSON.parse(
+    localStorage.getItem('browserBookmarks') || '[]'
+);
+
+// Wrap risky operations in try-catch
+try {
+    const element = document.querySelector('.toolbar');
+    if (element) {
+        // Safe to manipulate
+    }
+} catch (error) {
+    console.error('[YourMod] Error:', error);
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="best-practice">
+                    <div class="best-practice-num">4</div>
+                    <div>
+                        <h3>Performance Optimization</h3>
+                        <ul>
+                            <li>⚡ <strong>Minimize DOM operations:</strong> Batch changes when possible</li>
+                            <li>🎯 <strong>Use event delegation:</strong> For dynamic elements</li>
+                            <li>🧹 <strong>Clean up:</strong> Remove event listeners when done</li>
+                            <li>🚫 <strong>Avoid blocking:</strong> Don't block the main thread with heavy operations</li>
+                            <li>⏱️ <strong>Debounce/Throttle:</strong> For frequent events like scroll or resize</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="best-practice">
+                    <div class="best-practice-num">5</div>
+                    <div>
+                        <h3>Security Guidelines</h3>
+                        <ul>
+                            <li>🔒 <strong>Never store sensitive data:</strong> No passwords, tokens, or private info</li>
+                            <li>✅ <strong>Validate inputs:</strong> Always sanitize data from localStorage or user input</li>
+                            <li>🚫 <strong>Don't inject into iframes:</strong> Respect sandbox boundaries</li>
+                            <li>⚠️ <strong>Document permissions:</strong> Tell users what your mod accesses</li>
+                            <li>🆔 <strong>Use your TGUID:</strong> Prefix localStorage keys with your TGUID</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="best-practice">
+                    <div class="best-practice-num">6</div>
+                    <div>
+                        <h3>User Experience</h3>
+                        <ul>
+                            <li>💡 <strong>Visual feedback:</strong> Show users when actions complete</li>
+                            <li>🎨 <strong>Respect theme variables:</strong> Use CSS variables for colors</li>
+                            <li>🎛️ <strong>Make features opt-in:</strong> Don't force changes on users</li>
+                            <li>📚 <strong>Document your mod:</strong> Include clear comments and README</li>
+                            <li>🔔 <strong>Announce loading:</strong> Use broadcast() to notify users</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🚀 Advanced: Inter-Plugin Communication</h2>
+                
+                <h3>Scenario: Two Mods Working Together</h3>
+                <div class="code-block" data-lang="javascript">
+<pre>// MOD A: Theme Controller (com.shaman.themecontroller)
+(function() {
+    const TGUID = 'com.shaman.themecontroller';
+    
+    function init() {
+        window.TGMoLink.register(TGUID);
+        
+        // Listen for theme requests
+        document.addEventListener('TGMoLinkMessage', (e) => {
+            if (e.detail.message === 'GET_THEME') {
+                const currentTheme = document.body.classList.contains('dark-mode') 
+                    ? 'dark' : 'light';
+                window.TGMoLink.broadcast(
+                    JSON.stringify({theme: currentTheme}), 
+                    TGUID
+                );
+            }
+        });
+    }
+    
+    const check = setInterval(() => {
+        if (window.TGMoLink) {
+            clearInterval(check);
+            init();
+        }
+    }, 100);
+})();
+
+// MOD B: Status Widget (com.shaman.statuswidget)
+(function() {
+    const TGUID = 'com.shaman.statuswidget';
+    
+    function init() {
+        window.TGMoLink.register(TGUID);
+        
+        // Request theme from Theme Controller
+        window.TGMoLink.broadcast('GET_THEME', TGUID);
+        
+        // Listen for response
+        document.addEventListener('TGMoLinkMessage', (e) => {
+            if (e.detail.sender === 'com.shaman.themecontroller') {
+                const data = JSON.parse(e.detail.message);
+                console.log('Current theme is:', data.theme);
+                // Update widget accordingly
+            }
+        });
+    }
+    
+    const check = setInterval(() => {
+        if (window.TGMoLink) {
+            clearInterval(check);
+            init();
+        }
+    }, 100);
+})();</pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🧪 Testing Your TGPlug</h2>
+                <div class="success-box">
+                    <h3>Testing Checklist</h3>
+                    <ol>
+                        <li>✅ Place mod folder in <code>../ModsPort-TGMod/YourMod/</code></li>
+                        <li>✅ Verify <code>main.js</code> calls <code>register()</code> with valid TGUID</li>
+                        <li>✅ Open browser console (F12) for errors</li>
+                        <li>✅ Load mod via TGPanel manual loader</li>
+                        <li>✅ Check status bar for success/error message</li>
+                        <li>✅ Verify plug count in TGPanel updates</li>
+                        <li>✅ Test with both light and dark modes</li>
+                        <li>✅ Test with different TGRitual modes</li>
+                        <li>✅ Check console for your mod's logs</li>
+                        <li>✅ Verify no conflicts with other mods</li>
+                    </ol>
+                </div>
+
+                <div class="info-box">
+                    <h3>🔍 Debugging Tips</h3>
+                    <ul>
+                        <li><strong>Console Logs:</strong> Use <code>console.log('[YourMod]', ...)</code> with your mod name prefix</li>
+                        <li><strong>Check Registration:</strong> Look for "[TGMoLink] Successfully Registered: [your TGUID]"</li>
+                        <li><strong>Status Bar:</strong> Red text = error, normal text = success</li>
+                        <li><strong>Plug Count:</strong> Should increment when your mod loads</li>
+                        <li><strong>Check Network Tab:</strong> Verify main.js and style.css loaded (200 status)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔧 Troubleshooting Common Issues</h2>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: "TGUID is missing" warning</strong>
+                    <p><strong>Solution:</strong> Your main.js didn't call <code>window.TGMoLink.register("your.tguid")</code>. Add it at the start of your script!</p>
+                </div>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: "Invalid TGUID format" error in console</strong>
+                    <p><strong>Solution:</strong> Your TGUID doesn't match the pattern. Must contain at least one dot and no spaces (e.g., <code>com.name.mod</code>)</p>
+                </div>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: Plugin files not loading (404 errors)</strong>
+                    <p><strong>Solution:</strong> Check file paths. Files must be named exactly <code>main.js</code> and <code>style.css</code> inside your mod folder.</p>
+                </div>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: "TGMoLink is not defined" error</strong>
+                    <p><strong>Solution:</strong> Add the initialization delay check before using TGMoLink:</p>
+                    <div class="code-block" data-lang="javascript">
+<pre>const check = setInterval(() => {
+    if (window.TGMoLink) {
+        clearInterval(check);
+        // Your code here
+    }
+}, 100);</pre>
+                    </div>
+                </div>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: CSS not applying / being overridden</strong>
+                    <p><strong>Solution:</strong> Increase specificity or use <code>!important</code> sparingly. Make sure to target the correct elements with proper selectors.</p>
+                </div>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: Mod conflicts with other plugins</strong>
+                    <p><strong>Solution:</strong> Use unique class names, namespace your CSS, and prefix localStorage keys with your TGUID.</p>
+                </div>
+
+                <div class="troubleshoot-item">
+                    <strong>❌ Problem: "Mod already registered" warning</strong>
+                    <p><strong>Solution:</strong> You're trying to load the same mod twice. Check if it's already in the plug count before loading again.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📦 Distribution & Sharing</h2>
+                <div class="info-box">
+                    <h3>📤 How to Share Your TGPlug</h3>
+                    <ol>
+                        <li><strong>Package your files:</strong> Create a ZIP with your folder containing <code>main.js</code> and <code>style.css</code></li>
+                        <li><strong>Include README:</strong> Document your TGUID, features, and installation instructions</li>
+                        <li><strong>Add version info:</strong> Include version number in both files</li>
+                        <li><strong>License:</strong> Choose an appropriate open-source license (MIT, GPL, etc.)</li>
+                        <li><strong>Share responsibly:</strong> Warn users about required permissions</li>
+                    </ol>
+                </div>
+
+                <div class="success-box">
+                    <h3>📄 Sample README Template</h3>
+                    <div class="code-block" data-lang="markdown">
+<pre># [Your Mod Name]
+
+**TGUID:** `com.yourname.modname`  
+**Version:** 1.0.0  
+**Requires:** TGBrowser Beta 5+
+
+## Description
+Brief description of what your mod does.
+
+## Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+1. Download and extract to `../ModsPort-TGMod/com.yourname.modname/`
+2. Open TGBrowser
+3. Go to TGPanel > Load TGPlug
+4. Enter: `com.yourname.modname`
+5. Click the + button
+
+## Permissions
+- localStorage access for [reason]
+- DOM manipulation for [reason]
+
+## Compatibility
+- ✅ Beta 5 (v26.01.07a+)
+- ❌ Earlier versions (missing TGUID system)
+
+## License
+MIT License
+
+## Author
+Your Name - [Contact]</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📋 Version History & Changes</h2>
+                
+                <div class="info-box">
+                    <h3>🆕 Beta 5 (v26.01.07a) - Current</h3>
+                    <ul>
+                        <li>✨ Introduced TGUID validation system</li>
+                        <li>🔐 Added security gatekeeper for mod registration</li>
+                        <li>📊 Real-time plug status tracking</li>
+                        <li>🎯 Smart path resolution (TGUID, folder name, full path)</li>
+                        <li>⚠️ Security warnings for unregistered mods</li>
+                        <li>🔄 Duplicate mod prevention</li>
+                    </ul>
+                </div>
+
+                <div class="warning-box">
+                    <h3>📜 Beta 4 & Earlier (Pre-v26.01.07a)</h3>
+                    <ul>
+                        <li>Basic TGMod system with <code>tg_skin.css</code> and <code>tg_spirit.js</code> naming</li>
+                        <li>No TGUID requirement (mods loaded without validation)</li>
+                        <li>Limited error feedback</li>
+                        <li><strong>⚠️ Mods from these versions need updating for Beta 5!</strong></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>TGPlugs Developer Guide</strong> - Updated for TGBrowser Beta 5</p>
+            <p><strong>Documentation Version:</strong> 2.0 (Beta 5 Compatible)</p>
+            <p>Built by Shaman's Workshop • Part of TGProjects 🚀</p>
+        </footer>
+    </div>
+</body>
+</html>

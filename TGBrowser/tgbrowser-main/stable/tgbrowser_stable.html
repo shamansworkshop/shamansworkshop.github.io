@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGBrowser</title>
+    <style>
+        :root {
+            /* Day Mode */
+            --primary: #4285f4; /* Google Blue */
+            --primary-hover: #3367d6;
+            --accent: #ea4335; /* Google Red for "Clear" actions */
+            --bg: #f8f9fa;
+            --toolbar-bg: #ffffff;
+            --border: #dadce0;
+            --text: #202124;
+            --text-light: #5f6368;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --menu-bg: #ffffff;
+            --item-hover: #f1f3f4;
+        }
+
+        /* Night Mode */
+        body.dark-mode {
+            --primary: #8ab4f8;
+            --primary-hover: #aecbfa;
+            --accent: #f28b82;
+            --bg: #202124;
+            --toolbar-bg: #292a2d;
+            --border: #3c4043;
+            --text: #e8eaed;
+            --text-light: #9aa0a6;
+            --shadow: 0 4px 8px rgba(0,0,0,0.5);
+            --menu-bg: #292a2d;
+            --item-hover: #3c4043;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--toolbar-bg);
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            height: 48px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .nav-buttons { display: flex; gap: 4px; }
+
+        /* Universal Button Styles */
+        button {
+            background: transparent;
+            color: var(--text-light);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--item-hover);
+            color: var(--text);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        button.primary-action {
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            padding: 0 16px;
+            width: auto;
+            font-weight: 500;
+        }
+        button.primary-action:hover {
+            background: var(--primary-hover);
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Omnibox (Address Bar) */
+        .omnibox-container {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #address {
+            width: 100%;
+            padding: 0 16px;
+            height: 36px;
+            border: 1px solid var(--border); /* Flat border for Google feel */
+            border-radius: 18px; /* Pill shape */
+            font-size: 14px;
+            background: var(--bg);
+            color: var(--text);
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        #address:focus {
+            background: var(--toolbar-bg);
+            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+            border-color: transparent;
+        }
+
+        /* The Main View */
+        iframe {
+            flex-grow: 1;
+            border: none;
+            background: white;
+            width: 100%;
+            display: block;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            padding: 0 12px;
+            background: var(--toolbar-bg);
+            font-size: 11px;
+            color: var(--text-light);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        /* Menu */
+        .menu { position: relative; }
+        
+        .menu-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background: var(--menu-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 100;
+            padding: 8px 0;
+            border: 1px solid var(--border);
+        }
+
+        .menu-header {
+            padding: 8px 16px;
+            font-size: 16px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border);
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-section {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .menu-label {
+            padding: 4px 16px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+        }
+
+        .menu-item {
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .menu-item:hover { background: var(--item-hover); }
+
+        .list-item {
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 13px;
+            gap: 10px;
+        }
+        .list-item:hover { background: var(--item-hover); }
+        .list-item img { width: 16px; height: 16px; border-radius: 2px; }
+        .list-item span { 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            flex-grow: 1;
+        }
+        
+        .delete-btn {
+            opacity: 0;
+            color: var(--text-light);
+            font-size: 16px;
+            padding: 4px;
+        }
+        .list-item:hover .delete-btn { opacity: 1; }
+        .delete-btn:hover { color: var(--accent); }
+
+        /* Toggle Switch */
+        .toggle-switch { position: relative; width: 36px; height: 18px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px;
+            left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        /* Loading Pulse */
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .loading { animation: pulse 1s infinite; color: var(--primary); font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button id="back" disabled title="Go Back">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <button id="forward" disabled title="Go Forward">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <button id="refresh" title="Reload">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            </button>
+            <button id="homeBtn" title="Go Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </button>
+        </div>
+
+        <div class="omnibox-container">
+            <input type="text" id="address" placeholder="Search Bing or type a URL" autocomplete="off">
+        </div>
+
+        <button class="icon-btn" id="bookmarkBtn" title="Bookmark This Page">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </button>
+
+        <div class="menu">
+            <button id="menuBtn" title="Menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            </button>
+            
+            <div class="menu-content" id="menuContent">
+                <div class="menu-header">
+                    <span>TGBrowser Panel</span>
+                    <span style="font-size:10px; opacity:0.6">v25.12.18c-r2 (Stable)</span>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-item" id="setHomeAction">
+                        <span>Set Current Page as Home</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                    </div>
+                    <div class="menu-item">
+                        <span>Night Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-label">Memory Stones (Bookmarks)</div>
+                    <div id="bookmarkList"></div>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-label">The Trail (History)</div>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <iframe id="browser" src="about:blank" sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-popups-to-escape-sandbox allow-presentation"></iframe>
+
+    <div class="status-bar">
+        <div id="status">Ready</div>
+        <div>TGBrowser, an iFrame browser.</div>
+    </div>
+
+    <script>
+        // --- 1. CONFIG & ELEMENTS ---
+        const GOOGLE_SKELETON_KEY = "https://www.bing.com/webhp?igu=1";
+        const GOOGLE_SEARCH_TEMPLATE = "https://www.bing.com/search?igu=1&q=";
+
+        const iframe = document.getElementById('browser');
+        const addressBar = document.getElementById('address');
+        const statusBar = document.getElementById('status');
+        
+        // Navigation UI
+        const backBtn = document.getElementById('back');
+        const forwardBtn = document.getElementById('forward');
+        const refreshBtn = document.getElementById('refresh');
+        const homeBtn = document.getElementById('homeBtn');
+        const goBtn = document.getElementById('go'); // implicit via Enter key
+
+        // Menu UI
+        const menuBtn = document.getElementById('menuBtn');
+        const menuContent = document.getElementById('menuContent');
+        const bookmarkBtn = document.getElementById('bookmarkBtn');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const setHomeAction = document.getElementById('setHomeAction');
+        const bookmarkList = document.getElementById('bookmarkList');
+        const historyList = document.getElementById('historyList');
+
+        // State
+        let navHistory = [];
+        let historyIndex = -1;
+        let bookmarks = JSON.parse(localStorage.getItem('browserBookmarks')) || [];
+        let homepage = localStorage.getItem('browserHomepage') || GOOGLE_SKELETON_KEY;
+        let sessionHistory = []; // Tracks where we've been this session for the menu
+
+        // --- 2. INITIALIZATION ---
+
+        // Load Theme
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
+
+        // Start Browser
+        navigateTo(homepage);
+
+        // --- 3. NAVIGATION LOGIC (The Smart Hunter) ---
+
+        function loadFromInput() {
+            let input = addressBar.value.trim();
+            if (!input) return;
+
+            const domainPattern = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
+            const protocolPattern = /^[a-zA-Z]+:\/\//i;
+            const localhostPattern = /^localhost[:0-9]*/;
+
+            let destination;
+
+            if (protocolPattern.test(input)) {
+                destination = input;
+            } else if ((domainPattern.test(input) || localhostPattern.test(input)) && !input.includes(' ')) {
+                destination = 'https://' + input;
+            } else {
+                // THE BETA UPGRADE: Use Google with igu=1
+                statusBar.textContent = `Asking Bing...`;
+                destination = GOOGLE_SEARCH_TEMPLATE + encodeURIComponent(input);
+            }
+            navigateTo(destination);
+        }
+
+        function navigateTo(url) {
+            try {
+                statusBar.textContent = `Loading...`;
+                statusBar.classList.add('loading');
+                
+                iframe.src = url;
+                addressBar.value = url;
+
+                // Update Session History (The Trail)
+                addToSessionHistory(url);
+                
+                // Update Navigation State
+                if (navHistory[historyIndex] !== url) {
+                    navHistory = navHistory.slice(0, historyIndex + 1);
+                    navHistory.push(url);
+                    historyIndex++;
+                    updateNavButtons();
+                }
+
+            } catch (e) {
+                statusBar.textContent = "Error loading page.";
+            }
+        }
+
+        // --- 4. FEATURES & ENCHANTMENTS ---
+
+        // Home Logic
+        homeBtn.addEventListener('click', () => navigateTo(homepage));
+        
+        setHomeAction.addEventListener('click', () => {
+            const current = iframe.src;
+            localStorage.setItem('browserHomepage', current);
+            homepage = current;
+            statusBar.textContent = "Hearth (Homepage) set to this location.";
+            setTimeout(() => statusBar.textContent = "Ready", 2000);
+            menuContent.style.display = 'none';
+        });
+
+        // Dark Mode
+        darkModeToggle.addEventListener('change', () => {
+            if (darkModeToggle.checked) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        });
+
+        // Bookmarks
+        bookmarkBtn.addEventListener('click', () => {
+            const current = addressBar.value;
+            // Prevent bookmarking blank or duplicate
+            if (current && current !== 'about:blank' && !bookmarks.includes(current)) {
+                bookmarks.push(current);
+                localStorage.setItem('browserBookmarks', JSON.stringify(bookmarks));
+                
+                // Visual feedback
+                bookmarkBtn.style.fill = "currentColor";
+                setTimeout(() => bookmarkBtn.style.fill = "none", 400);
+                
+                renderLists();
+            }
+        });
+
+        // --- 5. RENDER LISTS (History & Bookmarks) ---
+
+        function addToSessionHistory(url) {
+            // Add to start of array, keep max 10
+            if (url === 'about:blank') return;
+            sessionHistory.unshift(url);
+            if (sessionHistory.length > 10) sessionHistory.pop();
+            renderLists();
+        }
+
+        function renderLists() {
+            // Render Bookmarks
+            bookmarkList.innerHTML = bookmarks.length ? '' : '<div style="padding:8px 16px; opacity:0.5; font-size:12px">No stones yet.</div>';
+            bookmarks.forEach((url, index) => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <img src="https://www.google.com/s2/favicons?domain=${getDomain(url)}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNjY2MiLz48L3N2Zz4='">
+                    <span>${url}</span>
+                    <div class="delete-btn">×</div>
+                `;
+                
+                div.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('delete-btn')) {
+                        navigateTo(url);
+                        menuContent.style.display = 'none';
+                    }
+                });
+
+                div.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    bookmarks.splice(index, 1);
+                    localStorage.setItem('browserBookmarks', JSON.stringify(bookmarks));
+                    renderLists();
+                });
+                bookmarkList.appendChild(div);
+            });
+
+            // Render History
+            historyList.innerHTML = sessionHistory.length ? '' : '<div style="padding:8px 16px; opacity:0.5; font-size:12px">The trail is empty.</div>';
+            sessionHistory.forEach((url) => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <img src="https://www.google.com/s2/favicons?domain=${getDomain(url)}">
+                    <span>${url}</span>
+                `;
+                div.addEventListener('click', () => {
+                    navigateTo(url);
+                    menuContent.style.display = 'none';
+                });
+                historyList.appendChild(div);
+            });
+        }
+
+        function getDomain(url) {
+            try { return new URL(url).hostname; } catch { return 'bing.com'; }
+        }
+
+        // --- 6. EVENT BINDINGS ---
+
+        addressBar.addEventListener('keypress', (e) => e.key === 'Enter' && loadFromInput());
+        
+        backBtn.addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const url = navHistory[historyIndex];
+                iframe.src = url;
+                addressBar.value = url;
+                updateNavButtons();
+            }
+        });
+
+        forwardBtn.addEventListener('click', () => {
+            if (historyIndex < navHistory.length - 1) {
+                historyIndex++;
+                const url = navHistory[historyIndex];
+                iframe.src = url;
+                addressBar.value = url;
+                updateNavButtons();
+            }
+        });
+
+        refreshBtn.addEventListener('click', () => iframe.src = iframe.src);
+
+        function updateNavButtons() {
+            backBtn.disabled = historyIndex <= 0;
+            forwardBtn.disabled = historyIndex >= navHistory.length - 1;
+        }
+
+        // Menu Toggles
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menuContent.contains(e.target) && e.target !== menuBtn) {
+                menuContent.style.display = 'none';
+            }
+        });
+
+        // Iframe Events
+        iframe.addEventListener('load', () => {
+            statusBar.classList.remove('loading');
+            statusBar.textContent = "Ready";
+        });
+    </script>
+</body>
+</html>

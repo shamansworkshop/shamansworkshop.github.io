@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGPlug Developer Guide for TGMoLink</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 25s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(40px) translateX(30px); }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+            animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: rgba(102, 126, 234, 0.25);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '🔥';
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.1;
+            top: -50px;
+            right: -30px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        header h1 {
+            font-size: 3.2em;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .badge-critical {
+            display: inline-block;
+            background: rgba(255, 82, 82, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 700;
+            margin: 10px 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 82, 82, 0.4);
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        h2 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2em;
+            margin-bottom: 25px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+            padding-bottom: 15px;
+            font-weight: 700;
+        }
+
+        h3 {
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 1.4em;
+            margin: 30px 0 15px 0;
+            font-weight: 600;
+        }
+
+        p, li {
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.05em;
+        }
+
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            color: #e8eaed;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid rgba(102, 126, 234, 0.7);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.15);
+            border: 2px solid rgba(255, 152, 0, 0.4);
+            border-left: 5px solid rgba(255, 152, 0, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .error-box {
+            background: rgba(244, 67, 54, 0.15);
+            border: 2px solid rgba(244, 67, 54, 0.4);
+            border-left: 5px solid rgba(244, 67, 54, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .success-box {
+            background: rgba(76, 175, 80, 0.15);
+            border: 2px solid rgba(76, 175, 80, 0.4);
+            border-left: 5px solid rgba(76, 175, 80, 0.7);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-item.bad {
+            border-color: rgba(244, 67, 54, 0.5);
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .comparison-item.good {
+            border-color: rgba(76, 175, 80, 0.5);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            padding: 30px 40px;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔥 TGPlug Developer's Guide for TGMoLink Security</h1>
+            <div class="badge-critical">BETTER TGMoLink Security COMPLIANT TGPLUGS</div>
+            <p style="margin-top: 15px; font-size: 1.1em;">The PROPER way to build TGBrowser mods</p>
+        </header>
+
+        <div class="content">
+            <!-- CRITICAL FIX SECTION -->
+            <div class="error-box">
+                <h2>⚠️ CRITICAL: Why Your TGPlug Might Throw An Error but Validated</h2>
+                <p><strong> Here's what happened:</strong></p>
+                <p>Your code had a <strong>race condition</strong>! 🏃‍♂️💨 It checked if TGMoLink existed, but didn't WAIT for registration to complete before running mod features. TGMoLink's security system is strict and will flag mods that try to do things before properly registering!</p>
+                
+                <h3 style="margin-top: 20px;">The Problem Pattern:</h3>
+                <div class="code-block">
+<pre>// ❌ BAD - This can cause race conditions!
+if (window.TGMoLink && window.TGMoLink.register) {
+    window.TGMoLink.register(MOD_ID);
+}
+
+// Your code runs immediately - but registration might not be done!
+initializeModFeatures(); // 💥 Gatekeeper throws warning!</pre>
+                </div>
+
+                <p style="margin-top: 15px;"><strong>Why it validates "eventually":</strong> The registration DOES happen, but there's a timing gap where your mod starts before TGMoLink confirms the TGUID. TGMoLink hates that! 😤</p>
+            </div>
+
+            <!-- THE SOLUTION -->
+            <div class="success-box">
+                <h2>✅ THE CORRECT PATTERN (TGMoLink COMPLIANT)</h2>
+                <p><strong>This is the ONLY way to ensure your mod passes TGMoLink's security checks:</strong></p>
+                
+                <div class="code-block">
+<pre>(function() {
+    'use strict';
+    const MOD_ID = 'workshop.shaman.yourplug'; // Use your workshop ID!
+
+    function startPlug() {
+        if (window.TGMoLink && window.TGMoLink.register) {
+            const success = window.TGMoLink.register(MOD_ID);
+            if (success) {
+                console.log(`[${MOD_ID}] Protocol Active. ⚡`);
+                // Only run your mod logic AFTER successful registration
+                initializeModFeatures();
+            }
+        } else {
+            // Wait silently without throwing errors
+            setTimeout(startPlug, 100);
+        }
+    }
+
+    function initializeModFeatures() {
+        // Your beautiful code goes here!
+        console.log('🎨 Mod features initialized!');
+        
+        // Example: Announce yourself
+        window.TGMoLink.broadcast('Mod is alive!', MOD_ID);
+        
+        // Example: Apply custom styling
+        document.body.style.setProperty('--custom-accent', '#667eea');
+    }
+
+    startPlug();
+})();</pre>
+                </div>
+
+                <h3>🎯 Why This Works Perfectly:</h3>
+                <ul>
+                    <li><strong>Recursive waiting:</strong> <code>setTimeout</code> keeps checking until TGMoLink loads</li>
+                    <li><strong>Registration-first:</strong> Calls <code>register()</code> and checks its return value</li>
+                    <li><strong>Gated execution:</strong> Features only run AFTER successful registration</li>
+                    <li><strong>No race conditions:</strong> Everything happens in the correct order!</li>
+                    <li><strong>Silent polling:</strong> Doesn't spam console or throw errors while waiting</li>
+                </ul>
+            </div>
+
+            <!-- COMPARISON -->
+            <h2>📊 Side-by-Side Comparison</h2>
+            <div class="comparison">
+                <div class="comparison-item bad">
+                    <h3>❌ OLD WAY (Race Condition)</h3>
+                    <div class="code-block">
+<pre>if (window.TGMoLink) {
+    window.TGMoLink.register(ID);
+}
+// Code runs immediately
+doStuff(); // 💥 Error!</pre>
+                    </div>
+                    <p><strong>Problems:</strong></p>
+                    <ul style="font-size: 0.9em;">
+                        <li>No success verification</li>
+                        <li>Features run too early</li>
+                        <li>Gatekeeper warnings</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-item good">
+                    <h3>✅ NEW WAY (Guaranteed Safe)</h3>
+                    <div class="code-block">
+<pre>function start() {
+    if (TGMoLink?.register) {
+        if (TGMoLink.register(ID)) {
+            doStuff(); // ✅ Safe!
+        }
+    } else setTimeout(start, 100);
+}
+start();</pre>
+                    </div>
+                    <p><strong>Benefits:</strong></p>
+                    <ul style="font-size: 0.9em;">
+                        <li>Waits for API</li>
+                        <li>Checks success</li>
+                        <li>Passes gatekeeper</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- COMPLETE WORKING EXAMPLE -->
+            <h2>🎨 Complete Working Example</h2>
+            <p>Here's a FULL working TGPlug that passes all TGMoLink security checks:</p>
+
+            <h3>main.js - Purple Theme Mod</h3>
+            <div class="code-block">
+<pre>// TGPlug: Shaman's Purple Dream
+// TGUID: workshop.shaman.purpledream
+// Version: 2.0 (Fixed)
+
+(function() {
+    'use strict';
+    
+    const MOD_ID = 'workshop.shaman.purpledream';
+    const VERSION = '2.0';
+    
+    // Master initialization function
+    function startPlug() {
+        // Check if TGMoLink exists and has register method
+        if (window.TGMoLink && window.TGMoLink.register) {
+            // Attempt registration
+            const registered = window.TGMoLink.register(MOD_ID);
+            
+            if (registered) {
+                console.log(`[${MOD_ID}] ⚡ Registration successful! Version ${VERSION}`);
+                
+                // NOW it's safe to run your mod features
+                initializeTheme();
+                announcePresence();
+                setupEventListeners();
+            } else {
+                console.error(`[${MOD_ID}] ❌ Registration failed - invalid TGUID?`);
+            }
+        } else {
+            // TGMoLink not ready yet, wait and try again
+            setTimeout(startPlug, 100);
+        }
+    }
+    
+    function initializeTheme() {
+        console.log(`[${MOD_ID}] 🎨 Applying purple theme...`);
+        
+        // Apply custom CSS variables
+        const root = document.documentElement;
+        root.style.setProperty('--primary', '#667eea');
+        root.style.setProperty('--accent', '#764ba2');
+        root.style.setProperty('--bg-gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
+        
+        // Add custom class to body
+        document.body.classList.add('purple-dream-active');
+    }
+    
+    function announcePresence() {
+        // Send message to other mods
+        window.TGMoLink.broadcast(
+            `Purple Dream Theme v${VERSION} is now active! 💜`,
+            MOD_ID
+        );
+        
+        // Show user notification
+        showNotification('Purple Dream Theme Activated! 💜');
+    }
+    
+    function setupEventListeners() {
+        // Listen for messages from other mods
+        document.addEventListener('TGMoLinkMessage', (event) => {
+            console.log(`[${MOD_ID}] Received message from ${event.detail.sender}:`, event.detail.message);
+        });
+        
+        console.log(`[${MOD_ID}] ✅ Event listeners configured`);
+    }
+    
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 999999;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+    
+    // Add animations to page
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
+        .purple-dream-active .toolbar {
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3) !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // START THE PLUG!
+    startPlug();
+    
+})();</pre>
+            </div>
+
+            <h3>style.css - Visual Enhancements</h3>
+            <div class="code-block">
+<pre>/* TGPlug: Shaman's Purple Dream
+ * TGUID: workshop.shaman.purpledream
+ */
+
+/* Purple accent everywhere */
+:root {
+    --primary: #667eea !important;
+    --accent: #764ba2 !important;
+}
+
+/* Enhanced toolbar */
+.toolbar {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)) !important;
+    backdrop-filter: blur(30px) !important;
+}
+
+/* Menu glow */
+.menu-content {
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Button hover effects */
+button:hover {
+    background: rgba(102, 126, 234, 0.2) !important;
+    transform: scale(1.1) !important;
+}</pre>
+            </div>
+
+            <!-- BEST PRACTICES -->
+            <div class="success-box">
+                <h2>✨ Best Practices Checklist</h2>
+                <ol>
+                    <li><strong>✅ Use the startup pattern:</strong> Always wrap in <code>startPlug()</code> function with recursive timeout</li>
+                    <li><strong>✅ Check registration success:</strong> Store the return value of <code>register()</code></li>
+                    <li><strong>✅ Gate your features:</strong> Only run mod code AFTER successful registration</li>
+                    <li><strong>✅ Use proper TGUID format:</strong> <code>domain.creator.modname</code> (e.g., <code>workshop.shaman.coolmod</code>)</li>
+                    <li><strong>✅ Test registration:</strong> Check console for success message before testing features</li>
+                    <li><strong>✅ Handle failures gracefully:</strong> Don't crash if registration fails</li>
+                    <li><strong>✅ Clean console output:</strong> Use meaningful prefixes like <code>[YourModID]</code></li>
+                </ol>
+            </div>
+
+            <!-- TROUBLESHOOTING -->
+            <div class="warning-box">
+                <h2>🔧 Common TGMoLink Errors & Fixes</h2>
+                
+                <h3>Error: "TGUID is missing" security warning</h3>
+                <p><strong>Cause:</strong> Your mod ran code before calling <code>register()</code></p>
+                <p><strong>Fix:</strong> Move ALL mod logic inside the <code>if (registered)</code> block</p>
+
+                <h3>Error: "Invalid TGUID format"</h3>
+                <p><strong>Cause:</strong> Your TGUID doesn't have a dot or has spaces</p>
+                <p><strong>Fix:</strong> Use format like <code>com.yourname.modname</code></p>
+
+                <h3>Error: Features work but gatekeeper complains</h3>
+                <p><strong>Cause:</strong> Race condition - code runs before registration confirms</p>
+                <p><strong>Fix:</strong> Use the recursive <code>startPlug()</code> pattern shown above</p>
+
+                <h3>Warning: Mod loads but nothing happens</h3>
+                <p><strong>Cause:</strong> Code is outside the registration success block</p>
+                <p><strong>Fix:</strong> Move <code>initializeModFeatures()</code> call inside <code>if (registered)</code></p>
+            </div>
+
+        </div>
+
+        <footer>
+            <p><strong>TGPlugs Developer Guide - TGMoLink Edition</strong></p>
+            <p>Guide for your journey in producing the greatest TGPlug.🔥</p>
+            <p style="margin-top: 10px; opacity: 0.8;">Now with 100% less race conditions! ⚡</p>
+        </footer>
+    </div>
+</body>
+</html>

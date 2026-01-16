@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shaman's Workshop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            background-image: url('https://media3.giphy.com/media/v1.Y2lkPTZjMDliOTUyN2FpOXNiaGcybmJpNjdjOG1vbnVjN3ZqcHNrcDA4czM1MHl5NjZ3aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xT9IgzoKnwFNmISR8I/giphy.gif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: -1;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 50px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #f0f0f0;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* NEW STYLES FOR THE PLAY STORE BUTTON */
+        .featured-app-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .playstore-btn {
+            display: inline-block;
+            /* Green gradient for Play Store vibes */
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 50px; /* Pill shape */
+            font-size: 1.2em;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .playstore-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+        }
+
+        .playstore-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .projects-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #ffffff;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid rgba(52, 152, 219, 0.6);
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .project-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%; /* Ensures buttons fill their grid cells */
+        }
+
+        .project-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .project-btn:active {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shaman's Workshop</h1>
+        <p class="subtitle">by Master Shaman</p>
+		<p class="subtitle">HTML, JavaScript, and CSS based projects.</p>
+		<p class="subtitle">For those who are above Android 11+, you're highly encouraged to use an app to load some of my projects...</p>
+		<p class="subtitle">More info regarding on "<a href="https://developer.android.com/about/versions/11/privacy/storage">Scoped Storage</a>" from Android Developers.</p>
+		
+        
+        <div class="featured-app-section">
+            <a href="https://play.google.com/store/apps/details?id=com.qamar.ide.web&hl=en" target="_blank" class="playstore-btn">
+                Download "WebCode" for seamless HTML loading (for Android users)
+            </a>
+        </div>
+
+        <div class="projects-section">
+            <h2 class="section-title">TGBrowser</h2>
+            <div class="projects-grid" id="projectsGrid">
+                <button class="project-btn" onclick="openProject('https://shamansworkshop.netlify.app/tgbrowser_page')">TGBrowser</button>
+            </div>
+        </div>
+		<div class="projects-section">
+				<h2 class="section-title">Coming Soon...</h2>
+				<div class="projects-grid" id="projectsGrid">
+				<button class="project-btn" onclick="openProject('https://youtu.be/2S54N2mFV_A?si=NaZEbHErFSBBxMny')">Coming Soon...</button>
+			</div>
+		</div>
+    </div>
+
+    <script>
+        function openProject(url) {
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>

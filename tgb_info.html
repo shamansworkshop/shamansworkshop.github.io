@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGBrowser - Release Notes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 25s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            left: -15%;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 30s ease-in-out infinite reverse;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(40px) translateX(30px); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            overflow: hidden;
+            animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            background: rgba(102, 126, 234, 0.2);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3.2em;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .section {
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+            padding-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .section p {
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.05em;
+            margin-bottom: 15px;
+        }
+
+        .releases {
+            display: grid;
+            gap: 35px;
+        }
+
+        .release-category h3 {
+            background: rgba(102, 126, 234, 0.25);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .release-category h3:hover {
+            background: rgba(102, 126, 234, 0.35);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .release-item {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            padding: 20px 25px;
+            border-left: 5px solid rgba(255, 193, 7, 0.5);
+            margin-bottom: 15px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .release-item:hover {
+            transform: translateX(8px);
+            background: rgba(255, 255, 255, 0.12);
+            border-left-color: rgba(255, 193, 7, 0.8);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .release-item strong {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.15em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .release-item p {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 400;
+        }
+
+        .release-item p:first-of-type {
+            display: inline-block;
+            background: rgba(76, 175, 80, 0.3);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            margin-left: 10px;
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        footer {
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            padding: 25px;
+            font-size: 0.95em;
+        }
+
+        footer strong {
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+        }
+
+        .editable-notice {
+            background: rgba(255, 193, 7, 0.15);
+            border: 2px dashed rgba(255, 193, 7, 0.4);
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TGBrowser Release Notes</h1>
+        </header>
+
+        <div class="content">
+
+            <div class="section">
+                <h2>About this Page</h2>
+                <p>TGBrowser's dedicated page for version releases notes.</p>
+            </div>
+
+            <div class="section">
+                <h2>Releases</h2>
+                <div class="editable-notice">
+                     <strong>Some Releases might not show up here.</strong> 
+                </div>
+                <div class="releases">
+                    <!-- STABLE RELEASES -->
+                    <div class="release-category">
+                        <h3>STABLE</h3>
+                        <div class="release-item">
+                            <strong>v2.4.5alpha</strong>
+                            <p>Link only access, no google search, default browser theme (VanillaUI, stock appearance)</p>
+                        </div>
+                        <div class="release-item">
+                            <strong>v25.12.18a-r1</strong>
+                            <p>Added bookmark feature, introduced Bing Search capability</p>
+                        </div>
+                        <div class="release-item">
+                            <strong>v25.12.18b-r7</strong>
+                            <p>Minor adjustments, moved to Google Search</p>
+                        </div>
+                        <div class="release-item">
+                            <strong>v25.12.18c-r2</strong>
+                            <p>Moved from VanillaUI to Material Design 2, improved TGPanel, homepage introduced, now defaults to Google Search</p>
+                        </div>
+						<div class="release-item">
+							<strong>v25.12.19a-r2</strong>
+							<p>From Beta 2 to Stable 2, applied critical switch to Bing Search.</p>
+						</div>
+						<div class="release-item">
+							<strong>v25.12.19b-r2</strong>
+							<p>From "Beta 3" to "Stable 3,' you can now experience TGMod v1 in this release, as well minor tweaks in the code.</p>
+						</div>
+                    </div>
+
+                    <!-- BETA RELEASES -->
+                    <div class="release-category">
+                        <h3>BETA</h3>
+                        <div class="release-item">
+                            <strong>v25.12.19a-br1</strong>
+                            <p>Introduced "Data Barrier (Cookie Blocker)" toggleable feature, introduced "Masked Agent" (user-agent spoofing)</p>
+                        </div>
+                        <div class="release-item">
+                            <strong>v25.12.19a-br2</strong>
+                            <p>Removed "Masked Agent" (buggy), added "About Browser" clickable button (opens a file via file directory, must have the file downloaded)</p>
+                        </div>
+						<div class="release-item">
+                            <strong>v25.12.19b-br1</strong>
+                            <p>Introducing TGMod (TGBrowser Modding Interface) - loads JS or CSS files next to the main .html file of the browser. (tg_skin.css and tg_spirit.js format only)</p>
+						</div>
+						<div class="release-item">
+							<strong>v25.12.19a-br2 & v25.12.19b-br2</strong>
+							<p>Applied the critical Bing Search switch.</p>
+						</div>
+						<div class="release-item">
+							<strong>v25.12.20a-br1</strong>
+							<p>Introducing "Beta 4," added TGPanel UI transparency, minimal tweaks and adjustments.</p>
+						</div>
+						<div class="release-item">
+							<strong>v25.12.20a-br2</strong>
+							<p>Adjusted TGPanel's UI - from white to cream color.</p>
+						</div>
+						<div class="release-item">
+							<strong>v25.12.20b-br1</strong>
+							<p>Removal of "Go Back" and "Go Forward" navigation buttons for space saving.</p>
+						</div>
+						<div class="release-item">
+							<strong>v26.01.07a</strong>
+							<p>Introducing "Beta 5," this release features TGChroma, TGRitual, all new homepage system "TGHome," dynamic animations on TGPanel, as well as the refined TGMod, now has "TGMoLink" - an API for all TGPugs to use, also enhancement of how the system loads TGPlugs.</p>
+						</div>
+						<div class="release-item">
+							<strong>v26.01.07b</strong>
+							<p>Updated TGMod system to load TGPlugs by folder name typing.</p>
+						</div>
+						<div class="release-item">
+							<strong>v26.01.07c</strong>
+							<p>Added a security system for TGMod, now checks for TGUID on all TGplugs loaded.</p>
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>2025 PROJECT TGBrowser by <strong>Shaman's Workshop</strong></p>
+        </footer>
+    </div>
+</body>
+</html>
