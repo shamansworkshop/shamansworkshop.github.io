@@ -450,12 +450,12 @@
             // 1. Load Skin (CSS) - Stepping out of TGBrowser folder into Mods
             const skin = document.createElement('link');
             skin.rel = 'stylesheet';
-            skin.href = '../ModsPort-TGMod/tg_skin.css'; // The "../" is the key!
+            skin.href = 'https://shamansworkshop.github.io/ModsPort-TGMod/style.css'; // The "../" is the key!
             document.head.appendChild(skin);
 
             // 2. Load Spirit (JS) - Stepping out of TGBrowser folder into Mods
             const spirit = document.createElement('script');
-            spirit.src = '../ModsPort-TGMod/tg_spirit.js'; // The "../" is the key!
+            spirit.src = 'https://shamansworkshop.github.io/ModsPort-TGMod/main.js'; // The "../" is the key!
             spirit.onload = () => {
                 console.log("TGBrowser: Spirit (JS) Loaded Successfully.");
                 const prevColor = statusBar.style.backgroundColor;
@@ -473,7 +473,7 @@
         });
 
         infoFileBtn.addEventListener('click', () => {
-            navigateTo('https://shamansworkshop.netlify.app/tgb_info'); 
+            navigateTo('https://shamansworkshop.github.io/tgb_info'); 
             menuContent.style.display = 'none';
         });
 
@@ -589,4 +589,5 @@
 
     </script>
 </body>
+
 </html>
