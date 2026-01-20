@@ -212,21 +212,21 @@
 </head>
 <body>
     <div class="login-gate" id="loginGate">
-        <h2>[ SANCTUARY GATE ]</h2>
-        <p class="subtitle">Master Shaman's Workshop</p>
+        <h2>[ WORKSHOP LOGIN (TOKENS) ]</h2>
+        <p class="subtitle">Shaman's Workshop</p>
         
         <div class="input-group">
             <input type="text" id="tokenInput" placeholder="Enter Access Token" autocomplete="off">
         </div>
         
-        <button class="login-btn" onclick="attemptLogin()">🔓 Enter Workshop</button>
+        <button class="login-btn" onclick="attemptLogin()">Enter Workshop</button>
         
         <div class="divider"></div>
         
         <div class="check-section">
             <small>Verify Your Credentials</small>
             <div class="input-group">
-                <input type="text" id="checkTguid" placeholder="TGUID (e.g., workshop.shaman)" autocomplete="off">
+                <input type="text" id="checkTguid" placeholder="TGUID (e.g., com.tgmods.sumtingwong)" autocomplete="off">
             </div>
             <button class="sub-btn" onclick="checkStatus()">Check Status</button>
             <p id="status-msg"></p>
@@ -261,11 +261,11 @@
         async function checkStatus() {
             const tguid = document.getElementById('checkTguid').value.trim();
             if (!tguid) {
-                document.getElementById('status-msg').innerHTML = "<span style='color:#ff6666'>⚠ Please enter a TGUID</span>";
+                document.getElementById('status-msg').innerHTML = "<span style='color:#ff6666'>Please enter a TGUID</span>";
                 return;
             }
             
-            document.getElementById('status-msg').innerText = "⏳ Consulting records...";
+            document.getElementById('status-msg').innerText = "Consulting records...";
             
             try {
                 const res = await fetch(ALLOWLIST_URL);
