@@ -1,0 +1,15 @@
+{
+  "banned_agents": ["BadBot/1.0", "Scraper-v2"],
+  "registry": [
+    {
+      "tguid": "workshop.shaman",
+      "token": "SHAMAN-DEV-2776",
+      "revoked": false
+    },
+    {
+      "tguid": "workshop.shaman.testers",
+      "token": "WORKSHOP-001",
+      "revoked": false
+    }
+  ]
+}

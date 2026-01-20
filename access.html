@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gatekeeper | Shaman Workshop</title>
+    <style>
+        body { background: #0a0a0a; color: #00ff99; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; flex-direction: column; }
+        .box { border: 1px solid #00ff99; padding: 20px; box-shadow: 0 0 15px #00ff9933; text-align: center; width: 300px; background: #050505; }
+        input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 10px; width: 90%; outline: none; margin-bottom: 10px; text-align: center; }
+        input:focus { border-color: #00ff99; }
+        button { background: #00ff99; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; }
+        button:hover { background: #fff; }
+        .sub-btn { background: transparent; color: #666; border: 1px solid #333; font-size: 0.8em; }
+        .sub-btn:hover { border-color: #00ff99; color: #00ff99; }
+        .divider { border-top: 1px solid #333; margin: 15px 0; }
+        #status-msg { font-size: 0.8em; margin-top: 10px; min-height: 1.2em; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h3>[ PRIVATE ACCESS ]</h3>
+        <input type="text" id="tokenInput" placeholder="Paste Token ID Here">
+        <button onclick="attemptLogin()">ENTER SANCTUARY</button>
+        
+        <div class="divider"></div>
+
+        <small style="color:#666">REQUEST STATUS</small>
+        <input type="text" id="checkTguid" placeholder="Your TGUID (e.g. workshop...)" style="margin-top:5px;">
+        <button class="sub-btn" onclick="checkStatus()">CHECK APPROVAL</button>
+        
+        <p id="status-msg"></p>
+    </div>
+
+    <script>
+        const allowlistRepo = "allowlist.json"; 
+
+        // 1. Check if Shaman Approved (Read JSON)
+        async function checkStatus() {
+            const tguid = document.getElementById('checkTguid').value.trim();
+            if(!tguid) return;
+            
+            document.getElementById('status-msg').innerText = "Consulting records...";
+            
+            try {
+                const res = await fetch(allowlistRepo);
+                const data = await res.json();
+                
+                // Find user in registry
+                const userEntry = data.registry.find(u => u.tguid === tguid);
+
+                if (userEntry && !userEntry.revoked) {
+                    document.getElementById('status-msg').innerHTML = `APPROVED.<br>Token: <b style="color:#fff; user-select:all">${userEntry.token}</b>`;
+                    document.getElementById('tokenInput').value = userEntry.token; // Auto-fill for convenience
+                } else if (userEntry && userEntry.revoked) {
+                    document.getElementById('status-msg').innerHTML = `<span style="color:red">ACCESS REVOKED</span>`;
+                } else {
+                    document.getElementById('status-msg').innerText = "Pending or Not Found.";
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // 3. Login Logic (Strict Allowlist)
+        async function attemptLogin() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token) return;
+
+            try {
+                const response = await fetch(allowlistRepo);
+                const data = await response.json();
+                
+                // Check if Token exists in registry AND is not revoked
+                const validEntry = data.registry.find(u => u.token === token && !u.revoked);
+                const isBannedAgent = data.banned_agents.some(agent => navigator.userAgent.includes(agent));
+
+                if (!validEntry || isBannedAgent) {
+                    document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:20%'>ACCESS DENIED</h1>";
+                    return;
+                }
+
+                sessionStorage.setItem('shaman_token', token);
+                window.location.href = 'placeholder';
+
+            } catch (error) {
+                alert("Database connection failed.");
+            }
+        }
+    </script>
+</body>
+</html>
