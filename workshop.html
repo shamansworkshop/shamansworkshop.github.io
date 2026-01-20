@@ -234,11 +234,11 @@
     <div class="container" id="workshopContent" style="display:none;">
         <div class="top-bar">
             <div class="session-timer" id="sessionTimer">Session: --:--</div>
-            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
 
         <div class="user-welcome" id="userWelcome">
-            ✨ Welcome, Shaman! ✨
+            Welcome, Shaman!
         </div>
 
         <h1>Shaman's Workshop</h1>
@@ -254,16 +254,16 @@
         <div class="projects-section">
             <h2 class="section-title">TGBrowser Ecosystem - <em>TGProjects</em></h2>
             <div class="projects-grid">
-                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/tgbrowser_page')">📱 TGBrowser</button>
-                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/tgplugs')">🔌 TGPlugs</button>
-                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/tgb_tgplugtest')">🧪 TGPlug Lab</button>
+                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/tgbrowser_page')">TGBrowser</button>
+                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/tgplugs')">TGPlugs</button>
+                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/tgb_tgplugtest')">TGPlug Lab</button>
             </div>
         </div>
         
         <div class="projects-section">
             <h2 class="section-title">???</h2>
             <div class="projects-grid">
-                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/error')">❓ ???</button>
+                <button class="project-btn" onclick="openProject('https://shamansworkshop.github.io/error')">???</button>
             </div>
         </div>
     </div>
@@ -303,7 +303,7 @@
             
             // Update welcome message
             document.getElementById('userWelcome').innerHTML = 
-                `✨ Welcome back, <strong>${session.tguid}</strong>! ✨`;
+                ` Welcome back, <strong>${session.tguid}</strong>! `;
             
             // Start session timer
             updateSessionTimer(session.expiry);
