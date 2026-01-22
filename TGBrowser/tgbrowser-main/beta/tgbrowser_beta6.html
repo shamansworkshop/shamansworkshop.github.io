@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TGBrowser Beta 6</title>
+    <style>
+        :root {
+            /* --- TGChroma Defaults --- */
+            --primary: #00ffff; 
+            --primary-hover: #3367d6;
+            --accent: #000000; 
+            
+            /* Base Colors */
+            --bg: #ffff;
+            --toolbar-bg: rgba(255, 255, 255, 0.8);
+            --border: #dadce0;
+            --text: #202124;
+            --text-light: #5f6368;
+            --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            
+            /* Glass variables */
+            --menu-bg: rgba(250, 245, 235, 0.85); 
+            --blur-amount: 20px;
+            --item-hover: rgba(0, 0, 0, 0.05);
+            
+            /* TGRitual: Matrix Font Default (Hidden) */
+            --font-stack: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --filter-fx: none;
+            
+            /* MD3 Specifics */
+            --radius-md: 4px;
+            --radius-lg: 20px;
+            --radius-pill: 50%;
+        }
+
+        /* Dark AMOLED Mode */
+        body.dark-mode {
+            --bg: #000000;
+            --toolbar-bg: rgba(0, 0, 0, 0.7);
+            --border: #000000;
+            --text: #ffffff;
+            --text-light: #ffffff;
+            --shadow: 0 4px 8px rgba(0,0,0,0.5);
+            --menu-bg: rgba(0, 0, 0, 0.85); 
+            --item-hover: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- TGRitual Modes --- */
+        
+        /* 1. Retro Mode */
+        body.ritual-retro {
+            --bg: #e0d0b0;
+            --toolbar-bg: #d0c0a0;
+            --text: #4a3b2a;
+            --border: #8b7d6b;
+            --font-stack: 'Courier New', Courier, monospace;
+            --filter-fx: sepia(0.4);
+            --menu-bg: #e0d0b0;
+        }
+        
+        /* 2. Matrix Mode */
+        body.ritual-matrix {
+            --bg: #000000;
+            --toolbar-bg: rgba(0, 20, 0, 0.9);
+            --text: #00ff00;
+            --text-light: #008f00;
+            --primary: #00ff00;
+            --border: #003300;
+            --font-stack: 'Consolas', monospace;
+            --shadow: 0 0 10px #00ff00;
+            --menu-bg: #000000;
+        }
+
+        /* 3. Material You (MD3) Mode [BONUS] */
+        body.ritual-md3 {
+            --bg: #fdfdfd; 
+            /* Tint toolbar with primary color slightly */
+            --toolbar-bg: color-mix(in srgb, var(--primary) 8%, white 90%);
+            --menu-bg: color-mix(in srgb, var(--primary) 5%, white 95%);
+            --border: transparent;
+            --shadow: none; /* MD3 prefers tonal elevation over shadow */
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --font-stack: 'Google Sans', Roboto, sans-serif;
+        }
+        body.ritual-md3.dark-mode {
+            --bg: #101010;
+            --toolbar-bg: color-mix(in srgb, var(--primary) 15%, #202020);
+            --menu-bg: color-mix(in srgb, var(--primary) 10%, #303030);
+            --text: #e0e0e0;
+        }
+        body.ritual-md3 .toolbar {
+            margin: 10px;
+            border-radius: 50px; /* Floating toolbar look */
+            width: calc(100% - 44px); /* Adjust for margins */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        body.ritual-md3 #address {
+            background: color-mix(in srgb, var(--primary) 10%, transparent);
+            border-radius: 50px;
+        }
+        body.ritual-md3 .menu-content {
+            border-radius: 28px;
+            border: none;
+            padding: 16px;
+        }
+        body.ritual-md3 .menu-item:hover {
+            border-radius: 50px;
+            background: color-mix(in srgb, var(--primary) 20%, transparent);
+        }
+
+        /* --- Global Styles --- */
+
+        body {
+            font-family: var(--font-stack);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.4s ease, color 0.4s ease, filter 0.4s;
+            overflow: hidden;
+            filter: var(--filter-fx);
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--toolbar-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            height: 48px;
+            flex-shrink: 0;
+            z-index: 20;
+            transition: all 0.3s ease;
+            animation: slideDownFade 0.6s cubic-bezier(0.16, 1, 0.3, 1); /* [Source: 78] */
+        }
+
+        @keyframes slideDownFade {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        button {
+            background: transparent;
+            color: var(--text-light);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Button Ripple [Source: 81] */
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%; width: 0; height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        button:active::before { width: 200px; height: 200px; }
+
+        /* Enhanced Button Hover [Source: 84] */
+        button:hover:not(:disabled) {
+            background: var(--item-hover);
+            color: var(--primary);
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active { transform: scale(0.95) rotate(0deg); }
+
+        /* Omnibox */
+        .omnibox-container {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        #address {
+            width: 100%;
+            padding: 0 16px;
+            height: 36px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            font-size: 14px;
+            background: rgba(var(--bg), 0.5);
+            color: var(--text);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); /* [Source: 86] */
+            outline: none;
+            font-family: inherit;
+        }
+
+        #address:focus {
+            background: var(--toolbar-bg);
+            box-shadow: 0 0 0 3px var(--primary), 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-color: transparent;
+            transform: scale(1.02);
+        }
+        
+        #address:not(:focus) { animation: breathe 4s ease-in-out infinite; } /* [Source: 88] */
+        @keyframes breathe {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+            50% { box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1); }
+        }
+
+        /* Viewport Area */
+        .viewport-stack {
+            flex-grow: 1;
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+            background: white;
+            animation: iframeFadeIn 0.5s ease-out; /* [Source: 128] */
+        }
+        @keyframes iframeFadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* TGHome Interface */
+        #tgHome {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 2;
+            background-image: linear-gradient(135deg, var(--primary), #c471ed, var(--accent));
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease;
+        }
+        
+        .tg-home-content {
+            background: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            animation: floatEnhanced 6s ease-in-out infinite; /* [Source: 91] */
+        }
+
+        .tg-home-title { font-size: 48px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .tg-home-subtitle { font-size: 18px; opacity: 0.9; }
+
+        @keyframes floatEnhanced {
+            0% { transform: translateY(0px) scale(1); }
+            33% { transform: translateY(-15px) scale(1.02); }
+            66% { transform: translateY(-5px) scale(0.98); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            padding: 0 12px;
+            background: var(--toolbar-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            font-size: 11px;
+            color: var(--text);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 24px;
+            flex-shrink: 0;
+            z-index: 20;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1); /* [Source: 112] */
+        }
+        
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Status Bar Loading [Source: 114] */
+        .status-bar.loading { position: relative; }
+        .status-bar.loading::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            animation: loadingSlide 1.5s ease-in-out infinite;
+        }
+        @keyframes loadingSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        .status-error { color: var(--text); animation: shake 0.5s ease-in-out; } /* [Source: 117] */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* Menu Panel */
+        .menu-content {
+            background: var(--menu-bg);
+            display: none;
+            position: absolute;
+            right: 20px;
+            top: 55px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 300px;
+            max-height: 60vh;
+            overflow-y: auto;
+            z-index: 100;
+            padding: 1px 0;
+            border: 3px solid var(--border);
+            /* Animation handled by JS/Enhanced CSS */
+        }
+
+        .menu-header {
+            padding: 12px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-section { padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .menu-label { padding: 4px 16px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--text-light); letter-spacing: 1px; }
+
+        .menu-item {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+            animation: fadeInSlide 0.3s ease-out backwards; /* [Source: 100] */
+        }
+        /* Staggered items */
+        .menu-item:nth-child(1) { animation-delay: 0.05s; }
+        .menu-item:nth-child(2) { animation-delay: 0.1s; }
+        .menu-item:nth-child(3) { animation-delay: 0.15s; }
+        .menu-item:nth-child(4) { animation-delay: 0.2s; }
+        
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .menu-item:hover { 
+            background: var(--item-hover); 
+            transform: translateX(5px);
+            border-left: 3px solid var(--primary);
+            padding-left: 13px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Inputs inside menu */
+        .menu-input {
+            width: 120px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--menu-bg);
+            font-size: 12px;
+            color: var(--text);
+        }
+        .menu-input:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+            transform: scale(1.05); transition: all 0.3s ease;
+        }
+        
+        .color-picker {
+            -webkit-appearance: none; border: none; width: 24px; height: 24px; cursor: pointer; padding: 0; background: none;
+        }
+        .color-picker:hover { animation: colorPulse 1s ease-in-out infinite; } /* [Source: 108] */
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 50%; }
+
+        @keyframes colorPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--primary); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(66, 133, 244, 0); }
+        }
+
+        /* Toggle Switch */
+        .toggle-switch { position: relative; width: 36px; height: 18px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { 
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; 
+            background-color: #ccc; border-radius: 34px; 
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* [Source: 105] */
+        }
+        .slider:before { 
+            position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; 
+            background-color: white; border-radius: 50%; 
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        input:checked + .slider { background-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        input:checked + .slider:before { transform: translateX(18px) scale(1.1); }
+        input.danger:checked + .slider { background-color: var(--primary); }
+
+        /* Plug Status */
+        .plug-status {
+            font-size: 10px;
+            padding: 4px 16px;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .plug-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+        .plug-active .plug-dot { 
+            background: #00FF00; 
+            animation: plugGlow 2s ease-in-out infinite; /* [Source: 121] */
+        }
+        @keyframes plugGlow {
+            0%, 100% { box-shadow: 0 0 5px var(--accent); }
+            50% { box-shadow: 0 0 15px var(--accent), 0 0 25px var(--accent); }
+        }
+
+        /* Bookmark Delete */
+        .delete-btn { transition: all 0.3s ease; display: inline-block; }
+        .delete-btn:hover { transform: scale(1.3) rotate(90deg); color: #ff0000 !important; }
+
+        /* --- LOADING OVERLAY CSS (From Code 1) --- */
+        #tgLoadingOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, #c471ed 50%, var(--accent) 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 1; transition: opacity 0.6s ease-out; pointer-events: none;
+        }
+        #tgLoadingOverlay.fade-out { opacity: 0; }
+        
+        .loading-logo {
+            font-size: 56px; font-weight: bold; color: white;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            margin-bottom: 30px; letter-spacing: 2px;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); }
+            50% { transform: scale(1.05); text-shadow: 0 4px 40px rgba(255, 255, 255, 0.6), 0 0 60px rgba(255, 255, 255, 0.4); }
+        }
+
+        .loading-spinner { position: relative; width: 80px; height: 80px; }
+        .spinner-ring {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            border: 3px solid transparent; border-top-color: white;
+            animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+        .spinner-ring:nth-child(2) {
+            width: 70%; height: 70%; top: 15%; left: 15%;
+            border-top-color: rgba(255, 255, 255, 0.7); animation-duration: 1.2s; animation-direction: reverse;
+        }
+        .spinner-ring:nth-child(3) {
+            width: 40%; height: 40%; top: 30%; left: 30%;
+            border-top-color: rgba(255, 255, 255, 0.5); animation-duration: 0.9s;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loading-text {
+            margin-top: 40px; font-size: 14px; color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 3px; text-transform: uppercase;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+        @keyframes fadeInOut { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        .loading-progress {
+            width: 200px; height: 3px; background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px; margin-top: 20px; overflow: hidden; position: relative;
+        }
+        .loading-progress-bar {
+            height: 100%; background: white; border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            animation: progressFill 2s ease-out forwards;
+        }
+        @keyframes progressFill { 0% { width: 0%; } 100% { width: 100%; } }
+
+        /* Loading Overlay Mode Specifics */
+        body.dark-mode #tgLoadingOverlay { background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%); }
+        body.dark-mode .loading-logo { color: var(--primary); text-shadow: 0 4px 20px var(--primary); }
+        body.dark-mode .spinner-ring { border-top-color: var(--primary); }
+        body.dark-mode .loading-progress-bar { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+        body.ritual-matrix #tgLoadingOverlay { background: #000000; }
+        body.ritual-matrix .loading-logo { color: #00ff00; font-family: 'Consolas', monospace; text-shadow: 0 0 20px #00ff00; }
+        body.ritual-matrix .spinner-ring { border-top-color: #00ff00; }
+        body.ritual-matrix .loading-text { color: #00ff00; }
+        
+        body.ritual-retro #tgLoadingOverlay { background: #e0d0b0; }
+        body.ritual-retro .loading-logo { color: #4a3b2a; font-family: 'Courier New', monospace; text-shadow: 2px 2px 0px #8b7d6b; }
+        body.ritual-retro .spinner-ring { border-top-color: #4a3b2a; }
+    </style>
+</head>
+<body>
+
+    <div id="tgLoadingOverlay">
+        <div class="loading-logo">TGBrowser</div>
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+        </div>
+        <div class="loading-text">Initializing...</div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="nav-buttons">
+            <button id="refresh" title="Reload"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></button>
+            <button id="homeBtn" title="TGHome"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></button>
+        </div>
+
+        <div class="omnibox-container">
+            <input type="text" id="address" placeholder="Search or Enter URL" autocomplete="off">
+        </div>
+
+        <button class="icon-btn" id="bookmarkBtn" title="Bookmark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
+
+        <div class="menu">
+            <button id="menuBtn" title="TGPanel"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+            
+            <div class="menu-content" id="menuContent">
+                <div class="menu-header">
+                    <span>TGPanel</span>
+                    <span style="font-size:12px; opacity:0.6">v26.01.22 (Beta 6)</span>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-label">Visuals</div>
+                    <div class="menu-item">
+                        <span>TGChroma</span>
+                        <input type="color" id="chromaPicker" class="color-picker" value="#4285f4">
+                    </div>
+                    
+                    <div class="menu-item">
+                        <span>Dark AMOLED Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="menu-item">
+                        <span>TGRitual</span>
+                        <select id="ritualSelect" class="menu-input">
+                            <option value="none">Default MD2</option>
+                            <option value="md3">Material You (MD3)</option>
+                            <option value="retro">90's Sepia Theme</option>
+                            <option value="matrix">Matrix Mode</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-label">TGHome Configuration</div>
+                    <div class="menu-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                        <span>Background Wallpaper (TGHome)</span>
+                        <input type="text" id="wallpaperInput" class="menu-input" style="width: 100%;" placeholder="Paste GIPHY links here...">
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-label">System</div>
+                    <div class="menu-item" title="Blocks cookies/storage">
+                        <span>Anti-Cookies</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dataBarrierToggle" class="danger">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="menu-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                        <span>Install TGPlug</span>
+                        <div style="display:flex; width:100%; gap:4px">
+                            <input type="text" id="modPathInput" class="menu-input" style="flex-grow:1;" placeholder="TGPlug's folder name">
+                            <button id="loadModBtn" style="width:24px; height:24px; border:1px solid var(--border)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="menu-item" id="infoFileBtn">
+                        <span>Release notes...</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </div>
+                    <div class="plug-status" id="plugStatus">
+                        <div class="plug-dot"></div>
+                        <span id="plugText">No TGPlugs Active</span>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-label">Saved Bookmarks</div>
+                    <div id="bookmarkList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="viewport-stack" id="viewportStack">
+        <div id="tgHome">
+            <div class="tg-home-content">
+                <div class="tg-home-title">TGBrowser</div>
+                <div class="tg-home-subtitle">Your journey starts here</div>
+            </div>
+        </div>
+        <div id="iframeContainer"></div>
+    </div>
+
+    <div class="status-bar">
+        <div id="status">Ready</div>
+        <div id="securityStatus">Unprotected</div>
+    </div>
+
+    <script>
+        // --- 1. CONFIG & SYSTEM ---
+        const GOOGLE_SEARCH_TEMPLATE = "https://www.bing.com/search?igu=1&q=";
+        const SANDBOX_BASE = "allow-scripts allow-popups allow-forms allow-modals allow-popups-to-escape-sandbox allow-presentation";
+        const SANDBOX_COOKIES = "allow-same-origin";
+
+        // Elements
+        const iframeContainer = document.getElementById('iframeContainer');
+        const tgHome = document.getElementById('tgHome');
+        const addressBar = document.getElementById('address');
+        const statusBar = document.getElementById('status');
+        
+        // Menu Elements
+        const menuBtn = document.getElementById('menuBtn'); // Moved up for scope
+        const menuContent = document.getElementById('menuContent');
+        const chromaPicker = document.getElementById('chromaPicker');
+        const wallpaperInput = document.getElementById('wallpaperInput');
+        const ritualSelect = document.getElementById('ritualSelect');
+        const plugStatus = document.getElementById('plugStatus');
+        const plugText = document.getElementById('plugText');
+        const modPathInput = document.getElementById('modPathInput');
+        const loadModBtn = document.getElementById('loadModBtn');
+        const dataBarrierToggle = document.getElementById('dataBarrierToggle');
+        const infoFileBtn = document.getElementById('infoFileBtn');
+
+        // State
+        let bookmarks = JSON.parse(localStorage.getItem('browserBookmarks')) || [];
+        let currentIframe = null;
+        let activePlugs = 0;
+        let pendingModID = null;
+
+        // --- ANIMATION CONTROLLERS (Integrated from Code 3 & 5) ---
+        
+        // Loading Screen Logic (Code 3)
+        const TGLoadingAnimation = {
+            overlay: null,
+            loadingText: null,
+            messages: ["Initializing...", "Loading TGMoLink...", "Preparing Interface...", "Almost Ready...", "Welcome!"],
+            currentIndex: 0,
+            
+            init: function() {
+                this.overlay = document.getElementById('tgLoadingOverlay');
+                this.loadingText = document.querySelector('.loading-text');
+                this.rotateMessages();
+                setTimeout(() => this.hide(), 2000);
+            },
+            
+            rotateMessages: function() {
+                const interval = setInterval(() => {
+                    if (this.currentIndex < this.messages.length - 1) {
+                        this.currentIndex++;
+                        this.loadingText.textContent = this.messages[this.currentIndex];
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 400);
+            },
+            
+            hide: function() {
+                this.overlay.classList.add('fade-out');
+                setTimeout(() => {
+                    this.overlay.style.display = 'none';
+                }, 600);
+            }
+        };
+
+        // Transition Logic (Code 5)
+        const TGTransitions = {
+            injectStyles: function() {
+                const styles = `
+                    @keyframes fadeOutScale { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+                    @keyframes fadeInScale { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
+                    @keyframes subtleBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.01); } }
+                    @keyframes particleFloat { 0% { opacity: 0; transform: translateY(0) scale(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-100px) scale(1); } }
+                    @keyframes popFoldOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.8) translateY(-30px); clip-path: inset(0 0 100% 0); } }
+                    @keyframes popUnfoldEnhanced { from { opacity: 0; transform: scale(0.8) translateY(-30px) rotateX(-15deg); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: scale(1) translateY(0) rotateX(0deg); clip-path: inset(0 0 0% 0); } }
+                `;
+                const sheet = document.createElement('style');
+                sheet.textContent = styles;
+                document.head.appendChild(sheet);
+            },
+
+            createParticles: function() {
+                const container = document.createElement('div');
+                container.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9998;`;
+                document.body.appendChild(container);
+
+                for (let i = 0; i < 20; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.cssText = `
+                        position: absolute; width: 4px; height: 4px; background: var(--primary); border-radius: 50%;
+                        top: ${Math.random() * 100}vh; left: ${Math.random() * 100}vw; opacity: 0;
+                        animation: particleFloat 2s ease-out forwards; animation-delay: ${Math.random() * 0.5}s;
+                    `;
+                    container.appendChild(particle);
+                }
+                setTimeout(() => container.remove(), 2500);
+            }
+        };
+
+        // --- 2. TGMod/TGMoLink API ---
+        window.TGMoLink = {
+            version: 'v3-secure',
+            plugs: [],
+            register: function(tgUid) {
+                const idPattern = /^[a-z0-9]+\.[a-z0-9\._-]+$/i; 
+                if (!tgUid || !idPattern.test(tgUid)) {
+                    console.error(`[TGMod] Invalid TGUID: ${tgUid}`);
+                    return false;
+                }
+                if (this.plugs.includes(tgUid)) {
+                    console.warn(`[TGMod] Duplicate TGPlug: ${tgUid}`);
+                    return true;
+                }
+                this.plugs.push(tgUid);
+                activePlugs++;
+                pendingModID = tgUid;
+                this.updateUI();
+                console.log(`[TGMod] Verified: ${tgUid}`);
+                return true;
+            },
+            broadcast: function(message, sender) { console.log(`[TGMod Message] ${sender}: ${message}`); },
+            updateUI: function() {
+                if (activePlugs > 0) {
+                    plugStatus.classList.add('plug-active');
+                    plugText.textContent = `${activePlugs} TGPlug(s) Active`;
+                } else {
+                    plugStatus.classList.remove('plug-active');
+                    plugText.textContent = "No TGPlugs Active";
+                }
+            },
+            inject: function(path) {
+                pendingModID = null;
+                const scriptPath = path.endsWith('/') ? path + 'main.js' : path + '/main.js';
+                const cssPath = path.endsWith('/') ? path + 'style.css' : path + '/style.css';
+                
+                const link = document.createElement('link');
+                link.rel = 'stylesheet'; link.href = cssPath;
+                document.head.appendChild(link);
+
+                const script = document.createElement('script');
+                script.src = scriptPath;
+                script.onload = () => {
+                    if (pendingModID) {
+                        statusBar.textContent = `TGMod: Securely loaded "${pendingModID}"`;
+                        statusBar.classList.remove('status-error');
+                    } else {
+                        console.error(`[TGMod] Security Alert: No TGUID for ${path}`);
+                        statusBar.textContent = "TGMod Security: TGUID Missing. Verification failed!";
+                        statusBar.classList.add('status-error');
+                    }
+                };
+                script.onerror = () => {
+                    statusBar.textContent = `TGMod: Failed to load from ${scriptPath}`;
+                    statusBar.classList.add('status-error');
+                };
+                document.body.appendChild(script);
+            }
+        };
+
+        // --- 3. INITIALIZATION ---
+
+        function init() {
+            TGTransitions.injectStyles();
+            TGLoadingAnimation.init(); // Start Animation
+            loadSettings();
+            showHomeAnimated();
+            
+            // Legacy Load (Example)
+            window.TGMoLink.inject('https://shamansworkshop.github.io/ModsPort-TGMod/'); 
+        }
+
+        function loadSettings() {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').checked = true;
+            }
+            const savedColor = localStorage.getItem('tgChroma');
+            if (savedColor) {
+                applyChroma(savedColor);
+                chromaPicker.value = savedColor;
+            }
+            const savedWall = localStorage.getItem('tgHomeWallpaper');
+            if (savedWall) {
+                tgHome.style.backgroundImage = `url('${savedWall}')`;
+                wallpaperInput.value = savedWall;
+            } 
+            const savedRitual = localStorage.getItem('tgRitual');
+            if (savedRitual && savedRitual !== 'none') {
+                document.body.classList.add(`ritual-${savedRitual}`);
+                ritualSelect.value = savedRitual;
+            }
+            renderLists();
+        }
+
+        // --- 4. CORE ENGINE (ANIMATED) ---
+
+        function showHomeAnimated() {
+            if (currentIframe) {
+                currentIframe.style.animation = 'fadeOutScale 0.4s ease-out forwards';
+                setTimeout(() => {
+                    currentIframe.style.display = 'none';
+                    currentIframe.style.animation = '';
+                }, 400);
+            }
+            tgHome.style.display = 'flex';
+            tgHome.style.animation = 'fadeInScale 0.6s ease-out forwards';
+            addressBar.value = "";
+            statusBar.textContent = "Welcome Home";
+            statusBar.classList.remove('status-error');
+        }
+
+        function createIframeAnimated(url) {
+            // Fade out TGHome
+            if (tgHome.style.display === 'flex') {
+                tgHome.style.animation = 'fadeOutScale 0.4s ease-out forwards';
+                setTimeout(() => {
+                    tgHome.style.display = 'none';
+                    tgHome.style.animation = '';
+                }, 400);
+            }
+
+            setTimeout(() => {
+                if (currentIframe) {
+                    currentIframe.style.display = 'block';
+                    if (currentIframe.src !== url) {
+                        currentIframe.style.animation = 'fadeInScale 0.5s ease-out';
+                        currentIframe.src = url;
+                    }
+                } else {
+                    const frame = document.createElement('iframe');
+                    let sandboxRules = SANDBOX_BASE;
+                    if (!dataBarrierToggle.checked) {
+                        sandboxRules += " " + SANDBOX_COOKIES;
+                        document.getElementById('securityStatus').textContent = "Standard";
+                        document.getElementById('securityStatus').style.color = "var(--text-light)";
+                    } else {
+                        document.getElementById('securityStatus').textContent = "Shield Active";
+                        document.getElementById('securityStatus').style.color = "var(--accent)";
+                    }
+                    frame.setAttribute('sandbox', sandboxRules);
+                    frame.src = url;
+                    frame.id = 'browser';
+                    frame.style.animation = 'iframeFadeIn 0.5s ease-out';
+                    
+                    frame.addEventListener('load', () => {
+                        statusBar.classList.remove('loading');
+                        statusBar.textContent = "Ready";
+                        frame.style.animation = 'subtleBounce 0.5s ease-out';
+                    });
+                    
+                    iframeContainer.innerHTML = '';
+                    iframeContainer.appendChild(frame);
+                    currentIframe = frame;
+                }
+            }, 400);
+            
+            addressBar.value = url;
+            statusBar.classList.add('loading');
+            statusBar.textContent = "Loading...";
+        }
+
+        function loadFromInput() {
+            let input = addressBar.value.trim();
+            if (!input) return;
+            const domainPattern = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
+            const protocolPattern = /^[a-zA-Z]+:\/\//i;
+            
+            let destination;
+            if (protocolPattern.test(input)) {
+                destination = input;
+            } else if (domainPattern.test(input) && !input.includes(' ')) {
+                destination = 'https://' + input;
+            } else {
+                destination = GOOGLE_SEARCH_TEMPLATE + encodeURIComponent(input);
+            }
+            createIframeAnimated(destination);
+        }
+
+        // --- 5. FEATURES & LISTENERS ---
+
+        chromaPicker.addEventListener('input', (e) => {
+            applyChroma(e.target.value);
+            localStorage.setItem('tgChroma', e.target.value);
+        });
+
+        function applyChroma(hex) {
+            document.documentElement.style.setProperty('--primary', hex);
+            document.documentElement.style.setProperty('--primary-hover', adjustColor(hex, -20));
+            // For MD3, we might want dynamic updates but CSS variables handle it mostly
+            if (!wallpaperInput.value) { tgHome.style.backgroundImage = ''; }
+        }
+
+        function adjustColor(color, amount) {
+            return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+        }
+
+        wallpaperInput.addEventListener('change', (e) => {
+            const url = e.target.value;
+            if(url) {
+                tgHome.style.backgroundImage = `url('${url}')`;
+                localStorage.setItem('tgHomeWallpaper', url);
+            } else {
+                tgHome.style.backgroundImage = ''; 
+                localStorage.removeItem('tgHomeWallpaper');
+            }
+        });
+
+        ritualSelect.addEventListener('change', (e) => {
+            document.body.classList.remove('ritual-retro', 'ritual-matrix', 'ritual-md3');
+            if (e.target.value !== 'none') {
+                document.body.classList.add(`ritual-${e.target.value}`);
+            }
+            localStorage.setItem('tgRitual', e.target.value);
+        });
+
+        loadModBtn.addEventListener('click', () => {
+            const val = modPathInput.value.trim();
+            if (val) {
+                let path;
+                const isID = /^[a-z0-9]+\.[a-z0-9\._-]+$/i.test(val);
+                if (isID) {
+                    path = 'https://shamansworkshop.github.io/tgplugs/' + val;
+                } else {
+                    path = 'https://shamansworkshop.github.io/tgplugs/' + val;
+                }
+                window.TGMoLink.inject(path);
+            }
+        });
+
+        document.getElementById('homeBtn').addEventListener('click', () => {
+            showHomeAnimated();
+            TGTransitions.createParticles();
+        });
+        
+        addressBar.addEventListener('keypress', (e) => e.key === 'Enter' && loadFromInput());
+        
+        document.getElementById('refresh').addEventListener('click', () => {
+            if (currentIframe && currentIframe.style.display !== 'none') currentIframe.src = currentIframe.src;
+        });
+
+        // Enhanced Menu Animation (Code 5 logic integrated)
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (menuContent.style.display === 'block') {
+                menuContent.style.animation = 'popFoldOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    menuContent.style.display = 'none';
+                    menuContent.style.animation = '';
+                }, 300);
+            } else {
+                menuContent.style.display = 'block';
+                // Animation is handled by CSS class/keyframe, but we ensure it plays
+                menuContent.style.animation = 'popUnfoldEnhanced 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menuContent.contains(e.target) && e.target !== menuBtn && menuContent.style.display === 'block') {
+                menuContent.style.animation = 'popFoldOut 0.3s ease-out forwards';
+                setTimeout(() => {
+                    menuContent.style.display = 'none';
+                    menuContent.style.animation = '';
+                }, 300);
+            }
+        });
+
+        document.getElementById('darkModeToggle').addEventListener('change', (e) => {
+            e.target.checked ? document.body.classList.add('dark-mode') : document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', e.target.checked ? 'enabled' : 'disabled');
+        });
+
+        dataBarrierToggle.addEventListener('change', () => {
+            if (currentIframe && currentIframe.src) {
+                const url = currentIframe.src;
+                currentIframe = null; 
+                createIframeAnimated(url);
+            }
+        });
+
+        infoFileBtn.addEventListener('click', () => {
+            createIframeAnimated('https://shamansworkshop.github.io/tgb_info');
+            menuContent.style.display = 'none';
+        });
+
+        document.getElementById('bookmarkBtn').addEventListener('click', () => {
+            const current = addressBar.value;
+            if (current && current !== 'about:blank' && !bookmarks.includes(current)) {
+                bookmarks.push(current);
+                localStorage.setItem('browserBookmarks', JSON.stringify(bookmarks));
+                renderLists();
+            }
+        });
+
+        function renderLists() {
+            const list = document.getElementById('bookmarkList');
+            list.innerHTML = bookmarks.length ? '' : '<div style="padding:8px; opacity:0.5; font-size:12px">No saved Bookmarks yet.</div>';
+            bookmarks.forEach((url, index) => {
+                const div = document.createElement('div');
+                div.className = 'menu-item';
+                div.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis">${url}</span> <span class="delete-btn" style="color:var(--accent)">×</span>`;
+                div.onclick = (e) => {
+                    if (e.target.classList.contains('delete-btn')) {
+                        e.stopPropagation();
+                        bookmarks.splice(index, 1);
+                        localStorage.setItem('browserBookmarks', JSON.stringify(bookmarks));
+                        renderLists();
+                    } else {
+                        createIframeAnimated(url);
+                        menuContent.style.display = 'none';
+                    }
+                };
+                list.appendChild(div);
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
