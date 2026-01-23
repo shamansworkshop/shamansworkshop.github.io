@@ -543,7 +543,7 @@
                             
                             // Shoot fragment outwards
                             const exDir = new BABYLON.Vector3(Math.random()-0.5, Math.random(), Math.random()-0.5).normalize();
-                            frag.physicsImpostor.applyImpulse(exDir.scale(30), frag.getAbsolutePosition());
+                            frag.physicsImpostor.applyImpulse(exDir.scale(12), frag.getAbsolutePosition());
 
                             spawnedMeshes.push(frag);
                         }
