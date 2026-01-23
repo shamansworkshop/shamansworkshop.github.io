@@ -29,23 +29,65 @@
             width: 240px;
             background: rgba(30, 30, 30, 0.95);
             border-radius: 8px;
-            padding: 15px;
+            padding: 10px 15px 15px 15px; /* Adjusted padding */
             color: #eee;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             border: 1px solid #444;
             user-select: none;
-            /* Ensure UI doesn't block touches completely, but buttons do */
             pointer-events: auto; 
+            transition: height 0.3s ease;
+        }
+
+        /* HEADER & MINIMIZE CONTROLS */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
         }
 
         h2 {
-            margin: 0 0 10px 0;
+            margin: 0;
             font-size: 18px;
-            border-bottom: 1px solid #555;
-            padding-bottom: 5px;
             color: #4aa3df;
+            border: none; /* Removed border from H2, moved to .panel-header */
         }
 
+        /* Minimize Button Style */
+        #btn-minimize {
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            line-height: 1;
+        }
+        #btn-minimize:hover {
+            background: #444;
+            color: white;
+        }
+
+        /* Logic to hide contents when minimized */
+        #ui-panel.minimized .panel-content {
+            display: none;
+        }
+        #ui-panel.minimized {
+            width: 200px; /* Optional: make it slightly narrower when minimized */
+        }
+        #ui-panel.minimized .panel-header {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        /* CONTENT STYLES */
         .section-label {
             font-size: 11px;
             font-weight: bold;
@@ -96,20 +138,6 @@
             font-weight: bold;
         }
 
-        /* TOGGLE BUTTON STYLE */
-        button.toggle-btn {
-            justify-content: space-between;
-        }
-        button.toggle-btn.on {
-            background: #2a803b;
-            border-color: #4adf63;
-        }
-        .status-text {
-            font-size: 10px;
-            opacity: 0.7;
-            text-transform: uppercase;
-        }
-
         button#btn-clear {
             background: #6e2828;
             border-color: #a34a4a;
@@ -142,32 +170,32 @@
 <body>
 
     <div id="ui-panel">
-        <h2>Physics Sandbox</h2>
-        <div class="instruction">
-            Left Click: Spawn Shape<br>
-            Right Drag: Rotate Camera
+        <div class="panel-header">
+            <h2>Physics Sandbox</h2>
+            <button id="btn-minimize" onclick="toggleUI()" title="Toggle Menu">-</button>
         </div>
 
-        <div class="section-label">Shape Selector</div>
-        <div class="control-group">
-            <button id="btn-box" class="active" onclick="selectShape('box')">
-                <span class="shape-icon icon-box"></span> Cube
-            </button>
-            <button id="btn-sphere" onclick="selectShape('sphere')">
-                <span class="shape-icon icon-sphere"></span> Sphere
-            </button>
-            <button id="btn-cyl" onclick="selectShape('cylinder')">
-                <span class="shape-icon icon-cyl"></span> Cylinder
-            </button>
+        <div class="panel-content">
+            <div class="instruction">
+                Left Click: Spawn Shape<br>
+                Right Drag: Rotate Camera
+            </div>
+
+            <div class="section-label">Shape Selector</div>
+            <div class="control-group">
+                <button id="btn-box" class="active" onclick="selectShape('box')">
+                    <span class="shape-icon icon-box"></span> Cube
+                </button>
+                <button id="btn-sphere" onclick="selectShape('sphere')">
+                    <span class="shape-icon icon-sphere"></span> Sphere
+                </button>
+                <button id="btn-cyl" onclick="selectShape('cylinder')">
+                    <span class="shape-icon icon-cyl"></span> Cylinder
+                </button>
+            </div>
+
+            <button id="btn-clear" onclick="clearObjects()">CLEAR SCENE</button>
         </div>
-
-        <div class="section-label">Environment</div>
-        <button id="btn-tilt" class="toggle-btn" onclick="toggleTilt()">
-            <span>Tilt Gravity</span>
-            <span id="tilt-status" class="status-text">OFF</span>
-        </button>
-
-        <button id="btn-clear" onclick="clearObjects()">CLEAR SCENE</button>
     </div>
 
     <canvas id="renderCanvas"></canvas>
@@ -178,9 +206,22 @@
         let selectedShape = 'box'; 
         let spawnedMeshes = [];    
         let sceneRef = null;
-        let tiltEnabled = false;
 
         // --- UI FUNCTIONS ---
+
+        function toggleUI() {
+            const panel = document.getElementById('ui-panel');
+            const btn = document.getElementById('btn-minimize');
+            
+            panel.classList.toggle('minimized');
+
+            // Change button text based on state
+            if (panel.classList.contains('minimized')) {
+                btn.innerText = "+";
+            } else {
+                btn.innerText = "-";
+            }
+        }
 
         function selectShape(shape) {
             selectedShape = shape;
@@ -200,63 +241,6 @@
             });
             spawnedMeshes = [];
         }
-
-        async function toggleTilt() {
-            const btn = document.getElementById('btn-tilt');
-            const status = document.getElementById('tilt-status');
-
-            if (!tiltEnabled) {
-                // Request Permission (Required for iOS 13+)
-                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    try {
-                        const permissionState = await DeviceOrientationEvent.requestPermission();
-                        if (permissionState === 'granted') {
-                            enableTilt(true);
-                        } else {
-                            alert("Permission to access device orientation was denied.");
-                        }
-                    } catch (error) {
-                        console.error(error);
-                    }
-                } else {
-                    // Non-iOS devices usually don't need explicit permission
-                    enableTilt(true);
-                }
-            } else {
-                enableTilt(false);
-            }
-        }
-
-        function enableTilt(enable) {
-            const btn = document.getElementById('btn-tilt');
-            const status = document.getElementById('tilt-status');
-            
-            tiltEnabled = enable;
-            
-            if (tiltEnabled) {
-                btn.classList.add('on');
-                status.innerText = "ON";
-                window.addEventListener('deviceorientation', handleOrientation);
-            } else {
-                btn.classList.remove('on');
-                status.innerText = "OFF";
-                window.removeEventListener('deviceorientation', handleOrientation);
-                // Reset gravity
-                if(sceneRef) sceneRef.getPhysicsEngine().setGravity(new BABYLON.Vector3(0, -9.81, 0));
-            }
-        }
-
-        function handleOrientation(event) {
-            if (!sceneRef || !tiltEnabled) return;
-            
-            // Map Gamma (Left/Right) and Beta (Front/Back) to Gravity
-            // Adjust multipliers to change sensitivity
-            const x = event.gamma / 5; // Left-Right tilt
-            const z = event.beta / 5;  // Front-Back tilt
-            
-            sceneRef.getPhysicsEngine().setGravity(new BABYLON.Vector3(x, -9.81, z));
-        }
-
 
         // --- BABYLON CONFIG ---
 
@@ -324,13 +308,8 @@
                                     // ALLOW CLICK ON ANY MESH (Ground or Object)
                                     if (pickInfo.hit && pickInfo.pickedMesh) {
                                         // Calculate spawn position based on the Normal of the face we clicked
-                                        // This allows stacking (Normal is Up) or attaching to side (Normal is Side)
                                         const normal = pickInfo.getNormal(true);
                                         if (normal) {
-                                            // We need to know the size of the NEW object to offset it correctly.
-                                            // Since spawnObject randomizes size slightly, we'll pass the position 
-                                            // and let the spawner adjust, or just approximate here.
-                                            // Approximation: Spawn at point + normal * 0.5 (safe buffer)
                                             const spawnPos = pickInfo.pickedPoint.add(normal.scale(0.6));
                                             this.spawnObject(selectedShape, spawnPos, scene);
                                         }
