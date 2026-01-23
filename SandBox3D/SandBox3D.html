@@ -525,7 +525,7 @@
                     },
 
                     spawnFragments: function(center, scene) {
-                        const numFrags = 8;
+                        const numFrags = 20;
                         for(let i=0; i<numFrags; i++) {
                             const frag = BABYLON.MeshBuilder.CreateBox("frag", {size: 0.5}, scene);
                             frag.position = center.clone();
