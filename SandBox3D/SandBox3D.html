@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Physics Sandbox (Tilt + Stacking)</title>
+    <style>
+        html, body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            outline: none;
+        }
+        
+        /* UI OVERLAY */
+        #ui-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 240px;
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 8px;
+            padding: 15px;
+            color: #eee;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            user-select: none;
+            /* Ensure UI doesn't block touches completely, but buttons do */
+            pointer-events: auto; 
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            border-bottom: 1px solid #555;
+            padding-bottom: 5px;
+            color: #4aa3df;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #888;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .instruction {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        /* BUTTONS */
+        button {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #444;
+            border-color: #777;
+        }
+
+        button.active {
+            background: #2a5c80;
+            border-color: #4aa3df;
+            font-weight: bold;
+        }
+
+        /* TOGGLE BUTTON STYLE */
+        button.toggle-btn {
+            justify-content: space-between;
+        }
+        button.toggle-btn.on {
+            background: #2a803b;
+            border-color: #4adf63;
+        }
+        .status-text {
+            font-size: 10px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        button#btn-clear {
+            background: #6e2828;
+            border-color: #a34a4a;
+            justify-content: center;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button#btn-clear:hover {
+            background: #8f3434;
+        }
+
+        /* INDICATOR DOTS */
+        .shape-icon {
+            width: 12px;
+            height: 12px;
+            margin-right: 10px;
+            background: #ccc;
+            display: inline-block;
+        }
+        .icon-box { border-radius: 2px; }
+        .icon-sphere { border-radius: 50%; }
+        .icon-cyl { border-radius: 2px; height: 16px; width: 8px; }
+    </style>
+
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/cannon.js"></script> 
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+</head>
+<body>
+
+    <div id="ui-panel">
+        <h2>Physics Sandbox</h2>
+        <div class="instruction">
+            Left Click: Spawn Shape<br>
+            Right Drag: Rotate Camera
+        </div>
+
+        <div class="section-label">Shape Selector</div>
+        <div class="control-group">
+            <button id="btn-box" class="active" onclick="selectShape('box')">
+                <span class="shape-icon icon-box"></span> Cube
+            </button>
+            <button id="btn-sphere" onclick="selectShape('sphere')">
+                <span class="shape-icon icon-sphere"></span> Sphere
+            </button>
+            <button id="btn-cyl" onclick="selectShape('cylinder')">
+                <span class="shape-icon icon-cyl"></span> Cylinder
+            </button>
+        </div>
+
+        <div class="section-label">Environment</div>
+        <button id="btn-tilt" class="toggle-btn" onclick="toggleTilt()">
+            <span>Tilt Gravity</span>
+            <span id="tilt-status" class="status-text">OFF</span>
+        </button>
+
+        <button id="btn-clear" onclick="clearObjects()">CLEAR SCENE</button>
+    </div>
+
+    <canvas id="renderCanvas"></canvas>
+
+    <script>
+        // --- SANDBOX LOGIC ---
+        
+        let selectedShape = 'box'; 
+        let spawnedMeshes = [];    
+        let sceneRef = null;
+        let tiltEnabled = false;
+
+        // --- UI FUNCTIONS ---
+
+        function selectShape(shape) {
+            selectedShape = shape;
+            document.querySelectorAll('.control-group button').forEach(b => b.classList.remove('active'));
+            
+            if(shape === 'box') document.getElementById('btn-box').classList.add('active');
+            if(shape === 'sphere') document.getElementById('btn-sphere').classList.add('active');
+            if(shape === 'cylinder') document.getElementById('btn-cyl').classList.add('active');
+        }
+
+        function clearObjects() {
+            if (!sceneRef) return;
+            spawnedMeshes.forEach(mesh => {
+                if(mesh && !mesh.isDisposed()) {
+                    mesh.dispose();
+                }
+            });
+            spawnedMeshes = [];
+        }
+
+        async function toggleTilt() {
+            const btn = document.getElementById('btn-tilt');
+            const status = document.getElementById('tilt-status');
+
+            if (!tiltEnabled) {
+                // Request Permission (Required for iOS 13+)
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    try {
+                        const permissionState = await DeviceOrientationEvent.requestPermission();
+                        if (permissionState === 'granted') {
+                            enableTilt(true);
+                        } else {
+                            alert("Permission to access device orientation was denied.");
+                        }
+                    } catch (error) {
+                        console.error(error);
+                    }
+                } else {
+                    // Non-iOS devices usually don't need explicit permission
+                    enableTilt(true);
+                }
+            } else {
+                enableTilt(false);
+            }
+        }
+
+        function enableTilt(enable) {
+            const btn = document.getElementById('btn-tilt');
+            const status = document.getElementById('tilt-status');
+            
+            tiltEnabled = enable;
+            
+            if (tiltEnabled) {
+                btn.classList.add('on');
+                status.innerText = "ON";
+                window.addEventListener('deviceorientation', handleOrientation);
+            } else {
+                btn.classList.remove('on');
+                status.innerText = "OFF";
+                window.removeEventListener('deviceorientation', handleOrientation);
+                // Reset gravity
+                if(sceneRef) sceneRef.getPhysicsEngine().setGravity(new BABYLON.Vector3(0, -9.81, 0));
+            }
+        }
+
+        function handleOrientation(event) {
+            if (!sceneRef || !tiltEnabled) return;
+            
+            // Map Gamma (Left/Right) and Beta (Front/Back) to Gravity
+            // Adjust multipliers to change sensitivity
+            const x = event.gamma / 5; // Left-Right tilt
+            const z = event.beta / 5;  // Front-Back tilt
+            
+            sceneRef.getPhysicsEngine().setGravity(new BABYLON.Vector3(x, -9.81, z));
+        }
+
+
+        // --- BABYLON CONFIG ---
+
+        const workshop = {
+            shaman: {
+                sandbox3d: {
+                    canvas: document.getElementById("renderCanvas"),
+                    engine: null,
+                    scene: null,
+
+                    init: function() {
+                        this.engine = new BABYLON.Engine(this.canvas, true);
+                        this.scene = this.createScene();
+                        sceneRef = this.scene;
+
+                        this.engine.runRenderLoop(() => {
+                            this.scene.render();
+                        });
+
+                        window.addEventListener("resize", () => {
+                            this.engine.resize();
+                        });
+                    },
+
+                    createScene: function() {
+                        const scene = new BABYLON.Scene(this.engine);
+                        
+                        // 1. Physics
+                        scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
+
+                        // 2. Camera
+                        const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 2.5, 20, BABYLON.Vector3.Zero(), scene);
+                        camera.attachControl(this.canvas, true);
+                        camera.wheelPrecision = 50;
+                        camera.panningSensibility = 0; 
+
+                        // 3. Lighting
+                        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+                        light.intensity = 0.8;
+                        const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
+                        dirLight.intensity = 0.5;
+
+                        // 4. Ground
+                        const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 40, height: 40}, scene);
+                        const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
+                        groundMat.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.2);
+                        groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+                        ground.material = groundMat;
+                        ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5, friction: 0.5 }, scene);
+
+                        // 5. Interaction
+                        this.setupInteraction(scene);
+
+                        return scene;
+                    },
+
+                    setupInteraction: function(scene) {
+                        scene.onPointerObservable.add((pointerInfo) => {
+                            switch (pointerInfo.type) {
+                                case BABYLON.PointerEventTypes.POINTERDOWN:
+                                    if(pointerInfo.event.button !== 0) return; 
+
+                                    const pickInfo = pointerInfo.pickInfo;
+                                    
+                                    // ALLOW CLICK ON ANY MESH (Ground or Object)
+                                    if (pickInfo.hit && pickInfo.pickedMesh) {
+                                        // Calculate spawn position based on the Normal of the face we clicked
+                                        // This allows stacking (Normal is Up) or attaching to side (Normal is Side)
+                                        const normal = pickInfo.getNormal(true);
+                                        if (normal) {
+                                            // We need to know the size of the NEW object to offset it correctly.
+                                            // Since spawnObject randomizes size slightly, we'll pass the position 
+                                            // and let the spawner adjust, or just approximate here.
+                                            // Approximation: Spawn at point + normal * 0.5 (safe buffer)
+                                            const spawnPos = pickInfo.pickedPoint.add(normal.scale(0.6));
+                                            this.spawnObject(selectedShape, spawnPos, scene);
+                                        }
+                                    }
+                                    break;
+                            }
+                        });
+                    },
+
+                    spawnObject: function(type, position, scene) {
+                        let mesh;
+                        const mat = new BABYLON.StandardMaterial("objMat", scene);
+                        mat.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
+                        
+                        // Scale factor (randomized slightly)
+                        const scale = Math.random() * 0.4 + 0.6; 
+
+                        if (type === 'box') {
+                            mesh = BABYLON.MeshBuilder.CreateBox("box", {size: scale}, scene);
+                            mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.2, friction: 0.6 }, scene);
+                        } 
+                        else if (type === 'sphere') {
+                            mesh = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: scale}, scene);
+                            mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.7, friction: 0.5 }, scene);
+                        }
+                        else if (type === 'cylinder') {
+                            mesh = BABYLON.MeshBuilder.CreateCylinder("cyl", {height: scale, diameter: scale/2}, scene);
+                            mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 1, restitution: 0.3, friction: 0.6 }, scene);
+                        }
+
+                        if (mesh) {
+                            mesh.position.copyFrom(position);
+                            mesh.material = mat;
+                            spawnedMeshes.push(mesh);
+                        }
+                    }
+                }
+            }
+        };
+
+        workshop.shaman.sandbox3d.init();
+
+    </script>
+</body>
+</html>
