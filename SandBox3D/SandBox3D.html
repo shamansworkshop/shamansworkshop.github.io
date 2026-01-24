@@ -38,7 +38,7 @@
             transition: height 0.3s ease;
             max-height: 90vh;
             overflow-y: auto;
-            z-index: 20; /* Higher than controls */
+            z-index: 20;
         }
 
         /* --- MOBILE CONTROLS --- */
@@ -48,7 +48,7 @@
             width: 120px;
             height: 120px;
             z-index: 10;
-            display: none; /* Hidden by default */
+            display: none;
             pointer-events: none;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
@@ -57,10 +57,7 @@
         
         .mobile-pad.visible { display: grid; }
 
-        /* Movement on LEFT */
         #move-controls { left: 30px; }
-        
-        /* Look on RIGHT */
         #look-controls { right: 30px; }
 
         .d-btn {
@@ -79,11 +76,9 @@
         }
         .d-btn:active { background: rgba(74, 163, 223, 0.5); border-color: #4aa3df; }
         
-        /* Look buttons specific style */
         #look-controls .d-btn { border-color: rgba(241, 196, 15, 0.5); }
         #look-controls .d-btn:active { background: rgba(241, 196, 15, 0.3); }
 
-        /* Grid positioning */
         .btn-u { grid-column: 2; grid-row: 1; }
         .btn-l { grid-column: 1; grid-row: 2; }
         .btn-r { grid-column: 3; grid-row: 2; }
@@ -94,7 +89,6 @@
             font-size: 10px; color: #888; text-transform: uppercase;
         }
 
-        /* UI Panel Header & Content */
         .panel-header {
             display: flex;
             justify-content: space-between;
@@ -176,6 +170,10 @@
         button#btn-freecam { border-left: 4px solid #f1c40f; }
         button#btn-freecam.active { background: #b7950b; border-color: #f1c40f; }
 
+        /* VIEW MODE COLOR */
+        button#btn-view { border-left: 4px solid #9b59b6; }
+        button#btn-view.active { background: #6c3483; border-color: #8e44ad; }
+
         /* FREEZE BUTTON */
         button#btn-freeze { border-left: 4px solid #3498db; }
         button#btn-freeze.active { background: #2980b9; border-color: #3498db; }
@@ -208,6 +206,8 @@
         .icon-frag { border-radius: 50%; background: #d35400; border: 2px dashed #000; }
         .icon-hand { background: transparent; border: 1px solid #2ecc71; width: 10px; height: 10px;}
         .icon-cam { background: transparent; border: 2px solid #f1c40f; width: 12px; height: 8px; border-radius: 2px; }
+        .icon-eye { background: transparent; border: 2px solid #9b59b6; border-radius: 50%; width: 12px; height: 6px; margin-top: 3px; position: relative; }
+        .icon-eye::after { content:''; position: absolute; left: 3px; top: 0; width: 4px; height: 4px; background: #9b59b6; border-radius: 50%; }
         .icon-ice { background: #3498db; transform: rotate(45deg); width: 8px; height: 8px; }
         .icon-x { background: transparent; color: #aaa; font-weight: bold; font-size: 14px; line-height: 10px; width: auto; height: auto; }
     </style>
@@ -220,7 +220,7 @@
 
     <div id="ui-panel">
         <div class="panel-header">
-            <h2>Physics Sandbox</h2>
+            <h2>Physics Panel</h2>
             <button id="btn-minimize" onclick="toggleUI()" title="Toggle Menu">-</button>
         </div>
 
@@ -232,10 +232,13 @@
             <div class="section-label">Tools</div>
             <div class="control-group">
                 <button id="btn-none" onclick="selectShape('none')">
-                    <span class="shape-icon icon-x">X</span> Selection Mode (None)
+                    <span class="shape-icon icon-x">X</span> None Mode
                 </button>
                 <button id="btn-freecam" onclick="selectShape('freecam')">
-                    <span class="shape-icon icon-cam"></span> FreeCam (Fly)
+                    <span class="shape-icon icon-cam"></span> FreeCam Mode (Fly)
+                </button>
+                <button id="btn-view" onclick="toggleViewMode()">
+                    <span class="shape-icon icon-eye"></span> Possess (Toggle)
                 </button>
                 <button id="btn-push" onclick="selectShape('push')">
                     <span class="shape-icon icon-hand"></span> Force Push
@@ -261,10 +264,10 @@
             <div class="section-label">Explosives</div>
             <div class="control-group">
                 <button id="btn-bomb" class="btn-explosive" onclick="selectShape('bomb')">
-                    <span class="shape-icon icon-bomb"></span> Bomb (4s Fuse)
+                    <span class="shape-icon icon-bomb"></span> Normal Bomb
                 </button>
                 <button id="btn-frag" class="btn-explosive" onclick="selectShape('frag_bomb')">
-                    <span class="shape-icon icon-frag"></span> Fragmented Bomb
+                    <span class="shape-icon icon-frag"></span> Debris Bomb
                 </button>
             </div>
 
@@ -297,6 +300,7 @@
         let freezeAction = 'freeze'; 
         let spawnedMeshes = [];    
         let sceneRef = null;
+        let viewTargetMesh = null; // Object currently being controlled
 
         // Control States
         const moveState = { up: false, down: false, left: false, right: false };
@@ -328,6 +332,26 @@
             }
         }
 
+        // --- KEY FIX FOR VIEW MODE SNAP BACK ---
+        function toggleViewMode() {
+            if(selectedShape === 'view') {
+                // EXITING View Mode
+                viewTargetMesh = null;
+                
+                // FORCE RESET Camera Position to Center Platform
+                const cam = workshop.shaman.sandbox3d.cameraFree;
+                if(cam) {
+                    cam.position.set(0, 20, -50);
+                    cam.setTarget(BABYLON.Vector3.Zero());
+                }
+
+                selectShape('box'); // Switch back to default tool (calls switchCamera inside)
+            } else {
+                // ENTERING View Mode
+                selectShape('view');
+            }
+        }
+
         function selectShape(shape) {
             selectedShape = shape;
             const instruct = document.getElementById('txt-instruct');
@@ -339,12 +363,22 @@
             
             // Handle Camera Swapping
             if(shape === 'freecam') {
+                viewTargetMesh = null; // Reset view target
                 workshop.shaman.sandbox3d.switchCamera(true);
-                instruct.innerHTML = "WASD / Arrows to Move";
+                instruct.innerHTML = "WASD / Arrows to Fly";
                 movePad.classList.add('visible');
                 lookPad.classList.add('visible');
-            } else {
-                workshop.shaman.sandbox3d.switchCamera(false);
+            } 
+            else if (shape === 'view') {
+                // Initial state for View Mode (before clicking object)
+                workshop.shaman.sandbox3d.switchCamera(true); // Use free cam logic but will override position
+                instruct.innerHTML = "CLICK an object to Control it.<br>Click 'View Mode' button to Exit.";
+                movePad.classList.add('visible');
+                lookPad.classList.add('visible');
+            }
+            else {
+                viewTargetMesh = null;
+                workshop.shaman.sandbox3d.switchCamera(false); // Orbit cam
                 instruct.innerHTML = "Left Click: Use Tool<br>Right Drag: Rotate Camera";
                 movePad.classList.remove('visible');
                 lookPad.classList.remove('visible');
@@ -359,6 +393,7 @@
             if(shape === 'push') document.getElementById('btn-push').classList.add('active');
             if(shape === 'none') document.getElementById('btn-none').classList.add('active');
             if(shape === 'freecam') document.getElementById('btn-freecam').classList.add('active');
+            if(shape === 'view') document.getElementById('btn-view').classList.add('active');
             
             if(shape === 'freeze') {
                 const btn = document.getElementById('btn-freeze');
@@ -369,6 +404,11 @@
 
         function clearObjects() {
             if (!sceneRef) return;
+            
+            // If clearing while viewing, reset first
+            if(selectedShape === 'view') toggleViewMode();
+            
+            viewTargetMesh = null;
             spawnedMeshes.forEach(mesh => {
                 if(mesh && !mesh.isDisposed()) {
                     mesh.dispose();
@@ -379,7 +419,6 @@
 
         // --- SETUP MOBILE BUTTONS ---
         function setupMobileButtons() {
-            // Helpers
             const bindBtn = (id, targetState, key) => {
                 const el = document.getElementById(id);
                 if(!el) return;
@@ -424,7 +463,8 @@
                         sceneRef = this.scene;
 
                         this.engine.runRenderLoop(() => {
-                            this.handleMobileInput();
+                            this.handleKillZone(); // Check for falling objects
+                            this.handleInput();    // Handle View Mode & FreeCam
                             this.scene.render();
                         });
 
@@ -487,24 +527,77 @@
                         return scene;
                     },
 
-                    handleMobileInput: function() {
-                        if(selectedShape !== 'freecam' || !this.cameraFree) return;
+                    // --- KILL ZONE LOGIC ---
+                    handleKillZone: function() {
+                        const killY = -60;
+                        for(let i = spawnedMeshes.length - 1; i >= 0; i--) {
+                            const mesh = spawnedMeshes[i];
+                            if(mesh && !mesh.isDisposed()) {
+                                if(mesh.position.y < killY) {
+                                    // If we are riding this object, exit view mode first
+                                    if(mesh === viewTargetMesh) {
+                                        // This will now trigger the SNAP BACK logic in toggleViewMode
+                                        toggleViewMode(); 
+                                    }
+                                    mesh.dispose();
+                                    spawnedMeshes.splice(i, 1);
+                                }
+                            }
+                        }
+                    },
+
+                    handleInput: function() {
+                        if(selectedShape !== 'freecam' && selectedShape !== 'view') return;
+                        if(!this.cameraFree) return;
                         
                         const cam = this.cameraFree;
-                        const moveSpeed = 1.0;
                         const lookSpeed = 0.02;
 
-                        // MOVEMENT
-                        if(moveState.up) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Forward()).scale(moveSpeed));
-                        if(moveState.down) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Backward()).scale(moveSpeed));
-                        if(moveState.left) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Left()).scale(moveSpeed));
-                        if(moveState.right) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Right()).scale(moveSpeed));
-
-                        // LOOKING (Rotation)
+                        // 1. LOOKING (Always active for FreeCam/ViewMode)
                         if(lookState.left) cam.rotation.y -= lookSpeed;
                         if(lookState.right) cam.rotation.y += lookSpeed;
                         if(lookState.up) cam.rotation.x -= lookSpeed;
                         if(lookState.down) cam.rotation.x += lookSpeed;
+
+                        // 2. MOVEMENT Logic
+                        if (selectedShape === 'view' && viewTargetMesh && viewTargetMesh.physicsImpostor) {
+                            // --- VIEW MODE MOVEMENT (Control Object) ---
+                            
+                            // Snap Camera to Object
+                            cam.position.copyFrom(viewTargetMesh.position);
+                            cam.position.y += 1.5; // Slightly above center (Eye level)
+
+                            // Force Logic
+                            const forcePower = 0.5; // Adjust speed
+                            const impulse = BABYLON.Vector3.Zero();
+
+                            // Calculate direction vectors based on Camera Rotation (Y only)
+                            const forward = cam.getDirection(BABYLON.Vector3.Forward());
+                            const right = cam.getDirection(BABYLON.Vector3.Right());
+
+                            // Flatten to ground plane (No flying)
+                            forward.y = 0;
+                            forward.normalize();
+                            right.y = 0;
+                            right.normalize();
+
+                            if(moveState.up) impulse.addInPlace(forward.scale(forcePower));
+                            if(moveState.down) impulse.addInPlace(forward.scale(-forcePower));
+                            if(moveState.left) impulse.addInPlace(right.scale(-forcePower));
+                            if(moveState.right) impulse.addInPlace(right.scale(forcePower));
+
+                            if(!impulse.equals(BABYLON.Vector3.Zero())) {
+                                viewTargetMesh.physicsImpostor.applyImpulse(impulse, viewTargetMesh.getAbsolutePosition());
+                            }
+
+                        } else if (selectedShape === 'freecam') {
+                            // --- STANDARD FREE CAM MOVEMENT ---
+                            const moveSpeed = 1.0;
+                            if(moveState.up) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Forward()).scale(moveSpeed));
+                            if(moveState.down) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Backward()).scale(moveSpeed));
+                            if(moveState.left) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Left()).scale(moveSpeed));
+                            if(moveState.right) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Right()).scale(moveSpeed));
+                        }
                     },
 
                     switchCamera: function(toFreeCam) {
@@ -514,14 +607,20 @@
                         this.cameraFree.detachControl();
 
                         if(toFreeCam) {
-                            this.cameraFree.position.copyFrom(this.cameraOrbit.position);
-                            const target = this.cameraOrbit.target.clone();
-                            this.cameraFree.setTarget(target);
-
+                            // If we aren't in view mode with a target, copy position
+                            // NOTE: If we just exited View Mode via toggleViewMode, the position is already reset
+                            if (!viewTargetMesh && selectedShape !== 'view') {
+                                // standard free cam behavior
+                            }
+                            
                             this.scene.activeCamera = this.cameraFree;
                             this.cameraFree.attachControl(this.canvas, true);
                         } else {
+                            // Orbit Mode
+                            // We use the FreeCamera's current position to place the Orbit Camera
                             this.cameraOrbit.position.copyFrom(this.cameraFree.position);
+                            
+                            // Calculate a target in front of where we were looking
                             const forward = this.cameraFree.getDirection(BABYLON.Vector3.Forward());
                             const newTarget = this.cameraFree.position.add(forward.scale(20));
                             this.cameraOrbit.setTarget(newTarget);
@@ -560,6 +659,15 @@
                                     const pickInfo = pointerInfo.pickInfo;
                                     if (pickInfo.hit && pickInfo.pickedMesh) {
                                         const mesh = pickInfo.pickedMesh;
+
+                                        // VIEW MODE SELECTION
+                                        if (selectedShape === 'view') {
+                                            if (mesh.physicsImpostor && mesh.physicsImpostor.mass > 0) {
+                                                viewTargetMesh = mesh;
+                                                document.getElementById('txt-instruct').innerHTML = "Controlling Object.<br>WASD to Move. Click Button to Exit.";
+                                            }
+                                            return;
+                                        }
 
                                         // FREEZE
                                         if (selectedShape === 'freeze') {
