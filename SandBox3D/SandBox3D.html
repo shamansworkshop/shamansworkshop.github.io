@@ -38,8 +38,63 @@
             transition: height 0.3s ease;
             max-height: 90vh;
             overflow-y: auto;
+            z-index: 20; /* Higher than controls */
         }
 
+        /* --- MOBILE CONTROLS --- */
+        .mobile-pad {
+            position: absolute;
+            bottom: 30px;
+            width: 120px;
+            height: 120px;
+            z-index: 10;
+            display: none; /* Hidden by default */
+            pointer-events: none;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 5px;
+        }
+        
+        .mobile-pad.visible { display: grid; }
+
+        /* Movement on LEFT */
+        #move-controls { left: 30px; }
+        
+        /* Look on RIGHT */
+        #look-controls { right: 30px; }
+
+        .d-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .d-btn:active { background: rgba(74, 163, 223, 0.5); border-color: #4aa3df; }
+        
+        /* Look buttons specific style */
+        #look-controls .d-btn { border-color: rgba(241, 196, 15, 0.5); }
+        #look-controls .d-btn:active { background: rgba(241, 196, 15, 0.3); }
+
+        /* Grid positioning */
+        .btn-u { grid-column: 2; grid-row: 1; }
+        .btn-l { grid-column: 1; grid-row: 2; }
+        .btn-r { grid-column: 3; grid-row: 2; }
+        .btn-d { grid-column: 2; grid-row: 3; }
+        .pad-label { 
+            grid-column: 2; grid-row: 2; 
+            display: flex; justify-content: center; align-items: center;
+            font-size: 10px; color: #888; text-transform: uppercase;
+        }
+
+        /* UI Panel Header & Content */
         .panel-header {
             display: flex;
             justify-content: space-between;
@@ -49,11 +104,7 @@
             margin-bottom: 10px;
         }
 
-        h2 {
-            margin: 0;
-            font-size: 18px;
-            color: #4aa3df;
-        }
+        h2 { margin: 0; font-size: 18px; color: #4aa3df; }
 
         #btn-minimize {
             background: transparent;
@@ -68,10 +119,7 @@
             font-size: 18px;
             line-height: 1;
         }
-        #btn-minimize:hover {
-            background: #444;
-            color: white;
-        }
+        #btn-minimize:hover { background: #444; color: white; }
 
         #ui-panel.minimized .panel-content { display: none; }
         #ui-panel.minimized { width: 200px; }
@@ -115,16 +163,8 @@
             font-size: 13px;
         }
         
-        button:hover {
-            background: #444;
-            border-color: #777;
-        }
-
-        button.active {
-            background: #2a5c80;
-            border-color: #4aa3df;
-            font-weight: bold;
-        }
+        button:hover { background: #444; border-color: #777; }
+        button.active { background: #2a5c80; border-color: #4aa3df; font-weight: bold; }
 
         /* TOOLS COLORS */
         button#btn-none { border-left: 4px solid #aaa; }
@@ -133,21 +173,21 @@
         button#btn-push { border-left: 4px solid #2ecc71; }
         button#btn-push.active { background: #27ae60; border-color: #2ecc71; }
 
-        /* BOMB BUTTON STYLE */
-        button.btn-explosive {
-            border-left: 4px solid #e74c3c;
-        }
-        button.btn-explosive.active {
-            background: #802a2a;
-            border-color: #df4a4a;
-        }
-        button.btn-explosive:hover {
-            background: #5c2828;
-        }
+        button#btn-freecam { border-left: 4px solid #f1c40f; }
+        button#btn-freecam.active { background: #b7950b; border-color: #f1c40f; }
 
-        button#btn-frag {
-            border-left: 4px solid #d35400;
-        }
+        /* FREEZE BUTTON */
+        button#btn-freeze { border-left: 4px solid #3498db; }
+        button#btn-freeze.active { background: #2980b9; border-color: #3498db; }
+        button#btn-freeze.thaw-mode { border-left-color: #e67e22; }
+        button#btn-freeze.thaw-mode.active { background: #a04000; border-color: #e67e22; }
+
+        /* BOMB BUTTON STYLE */
+        button.btn-explosive { border-left: 4px solid #e74c3c; }
+        button.btn-explosive.active { background: #802a2a; border-color: #df4a4a; }
+        button.btn-explosive:hover { background: #5c2828; }
+
+        button#btn-frag { border-left: 4px solid #d35400; }
 
         button#btn-clear {
             background: #6e2828;
@@ -157,24 +197,18 @@
             margin-top: 10px;
             width: 100%;
         }
-        button#btn-clear:hover {
-            background: #8f3434;
-        }
+        button#btn-clear:hover { background: #8f3434; }
 
         /* SHAPE ICONS */
-        .shape-icon {
-            width: 12px;
-            height: 12px;
-            margin-right: 10px;
-            background: #ccc;
-            display: inline-block;
-        }
+        .shape-icon { width: 12px; height: 12px; margin-right: 10px; background: #ccc; display: inline-block; }
         .icon-box { border-radius: 2px; }
         .icon-sphere { border-radius: 50%; }
         .icon-cyl { border-radius: 2px; height: 16px; width: 8px; }
         .icon-bomb { border-radius: 50%; background: #e74c3c; border: 1px solid #000; }
         .icon-frag { border-radius: 50%; background: #d35400; border: 2px dashed #000; }
         .icon-hand { background: transparent; border: 1px solid #2ecc71; width: 10px; height: 10px;}
+        .icon-cam { background: transparent; border: 2px solid #f1c40f; width: 12px; height: 8px; border-radius: 2px; }
+        .icon-ice { background: #3498db; transform: rotate(45deg); width: 8px; height: 8px; }
         .icon-x { background: transparent; color: #aaa; font-weight: bold; font-size: 14px; line-height: 10px; width: auto; height: auto; }
     </style>
 
@@ -192,8 +226,7 @@
 
         <div class="panel-content">
             <div class="instruction">
-                Left Click: Use Tool<br>
-                Right Drag: Rotate Camera
+                <span id="txt-instruct">Left Click: Use Tool<br>Right Drag: Rotate Camera</span>
             </div>
 
             <div class="section-label">Tools</div>
@@ -201,8 +234,14 @@
                 <button id="btn-none" onclick="selectShape('none')">
                     <span class="shape-icon icon-x">X</span> Selection Mode (None)
                 </button>
+                <button id="btn-freecam" onclick="selectShape('freecam')">
+                    <span class="shape-icon icon-cam"></span> FreeCam (Fly)
+                </button>
                 <button id="btn-push" onclick="selectShape('push')">
                     <span class="shape-icon icon-hand"></span> Force Push
+                </button>
+                <button id="btn-freeze" onclick="toggleFreezeLogic()">
+                    <span class="shape-icon icon-ice"></span> Freeze Object
                 </button>
             </div>
 
@@ -233,14 +272,35 @@
         </div>
     </div>
 
+    <div id="move-controls" class="mobile-pad">
+        <div class="d-btn btn-u" id="btn-move-up">▲</div>
+        <div class="d-btn btn-l" id="btn-move-left">◀</div>
+        <div class="pad-label">Move</div>
+        <div class="d-btn btn-r" id="btn-move-right">▶</div>
+        <div class="d-btn btn-d" id="btn-move-down">▼</div>
+    </div>
+
+    <div id="look-controls" class="mobile-pad">
+        <div class="d-btn btn-u" id="btn-look-up">▲</div>
+        <div class="d-btn btn-l" id="btn-look-left">◀</div>
+        <div class="pad-label">Look</div>
+        <div class="d-btn btn-r" id="btn-look-right">▶</div>
+        <div class="d-btn btn-d" id="btn-look-down">▼</div>
+    </div>
+
     <canvas id="renderCanvas"></canvas>
 
     <script>
         // --- SANDBOX LOGIC ---
         
         let selectedShape = 'box'; 
+        let freezeAction = 'freeze'; 
         let spawnedMeshes = [];    
         let sceneRef = null;
+
+        // Control States
+        const moveState = { up: false, down: false, left: false, right: false };
+        const lookState = { up: false, down: false, left: false, right: false };
 
         // --- UI FUNCTIONS ---
 
@@ -251,10 +311,46 @@
             btn.innerText = panel.classList.contains('minimized') ? "+" : "-";
         }
 
+        function toggleFreezeLogic() {
+            const btn = document.getElementById('btn-freeze');
+            if(selectedShape === 'freeze') {
+                if(freezeAction === 'freeze') {
+                    freezeAction = 'thaw';
+                    btn.innerHTML = '<span class="shape-icon icon-ice" style="background:#e67e22"></span> Unfreeze Object';
+                    btn.classList.add('thaw-mode');
+                } else {
+                    freezeAction = 'freeze';
+                    btn.innerHTML = '<span class="shape-icon icon-ice"></span> Freeze Object';
+                    btn.classList.remove('thaw-mode');
+                }
+            } else {
+                selectShape('freeze');
+            }
+        }
+
         function selectShape(shape) {
             selectedShape = shape;
+            const instruct = document.getElementById('txt-instruct');
+            const movePad = document.getElementById('move-controls');
+            const lookPad = document.getElementById('look-controls');
+
+            // Reset UI
             document.querySelectorAll('.control-group button').forEach(b => b.classList.remove('active'));
             
+            // Handle Camera Swapping
+            if(shape === 'freecam') {
+                workshop.shaman.sandbox3d.switchCamera(true);
+                instruct.innerHTML = "WASD / Arrows to Move";
+                movePad.classList.add('visible');
+                lookPad.classList.add('visible');
+            } else {
+                workshop.shaman.sandbox3d.switchCamera(false);
+                instruct.innerHTML = "Left Click: Use Tool<br>Right Drag: Rotate Camera";
+                movePad.classList.remove('visible');
+                lookPad.classList.remove('visible');
+            }
+
+            // Highlight Buttons
             if(shape === 'box') document.getElementById('btn-box').classList.add('active');
             if(shape === 'sphere') document.getElementById('btn-sphere').classList.add('active');
             if(shape === 'cylinder') document.getElementById('btn-cyl').classList.add('active');
@@ -262,6 +358,13 @@
             if(shape === 'frag_bomb') document.getElementById('btn-frag').classList.add('active');
             if(shape === 'push') document.getElementById('btn-push').classList.add('active');
             if(shape === 'none') document.getElementById('btn-none').classList.add('active');
+            if(shape === 'freecam') document.getElementById('btn-freecam').classList.add('active');
+            
+            if(shape === 'freeze') {
+                const btn = document.getElementById('btn-freeze');
+                btn.classList.add('active');
+                if(freezeAction === 'thaw') btn.classList.add('thaw-mode');
+            }
         }
 
         function clearObjects() {
@@ -274,6 +377,35 @@
             spawnedMeshes = [];
         }
 
+        // --- SETUP MOBILE BUTTONS ---
+        function setupMobileButtons() {
+            // Helpers
+            const bindBtn = (id, targetState, key) => {
+                const el = document.getElementById(id);
+                if(!el) return;
+                // Mouse
+                el.addEventListener('mousedown', (e) => { e.preventDefault(); targetState[key] = true; });
+                el.addEventListener('mouseup', (e) => { e.preventDefault(); targetState[key] = false; });
+                el.addEventListener('mouseleave', () => { targetState[key] = false; });
+                // Touch
+                el.addEventListener('touchstart', (e) => { e.preventDefault(); targetState[key] = true; }, {passive: false});
+                el.addEventListener('touchend', (e) => { e.preventDefault(); targetState[key] = false; });
+            };
+
+            // Bind Movement
+            bindBtn('btn-move-up', moveState, 'up');
+            bindBtn('btn-move-down', moveState, 'down');
+            bindBtn('btn-move-left', moveState, 'left');
+            bindBtn('btn-move-right', moveState, 'right');
+
+            // Bind Looking
+            bindBtn('btn-look-up', lookState, 'up');
+            bindBtn('btn-look-down', lookState, 'down');
+            bindBtn('btn-look-left', lookState, 'left');
+            bindBtn('btn-look-right', lookState, 'right');
+        }
+        setupMobileButtons();
+
         // --- BABYLON CONFIG ---
 
         const workshop = {
@@ -282,6 +414,9 @@
                     canvas: document.getElementById("renderCanvas"),
                     engine: null,
                     scene: null,
+                    
+                    cameraOrbit: null,
+                    cameraFree: null,
 
                     init: function() {
                         this.engine = new BABYLON.Engine(this.canvas, true);
@@ -289,6 +424,7 @@
                         sceneRef = this.scene;
 
                         this.engine.runRenderLoop(() => {
+                            this.handleMobileInput();
                             this.scene.render();
                         });
 
@@ -303,11 +439,21 @@
                         // 1. Physics
                         scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
 
-                        // 2. Camera (Zoomed out more for bigger platform)
-                        const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, Math.PI / 2.5, 60, BABYLON.Vector3.Zero(), scene);
-                        camera.attachControl(this.canvas, true);
-                        camera.wheelPrecision = 50;
-                        camera.panningSensibility = 0; 
+                        // 2. Cameras
+                        this.cameraOrbit = new BABYLON.ArcRotateCamera("CameraOrbit", -Math.PI / 2, Math.PI / 2.5, 60, BABYLON.Vector3.Zero(), scene);
+                        this.cameraOrbit.attachControl(this.canvas, true);
+                        this.cameraOrbit.wheelPrecision = 50;
+                        this.cameraOrbit.panningSensibility = 0; 
+
+                        this.cameraFree = new BABYLON.UniversalCamera("CameraFree", new BABYLON.Vector3(0, 10, -40), scene);
+                        this.cameraFree.setTarget(BABYLON.Vector3.Zero());
+                        
+                        this.cameraFree.keysUp = [87, 38]; // W
+                        this.cameraFree.keysDown = [83, 40]; // S
+                        this.cameraFree.keysLeft = [65, 37]; // A
+                        this.cameraFree.keysRight = [68, 39]; // D
+                        this.cameraFree.speed = 1.0; 
+                        this.cameraFree.inertia = 0.6;
 
                         // 3. Lighting
                         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
@@ -315,7 +461,7 @@
                         const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-1, -2, -1), scene);
                         dirLight.intensity = 0.5;
 
-                        // 4. Ground (Expanded greatly)
+                        // 4. Ground
                         const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 200, height: 200}, scene);
                         const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
                         groundMat.diffuseColor = new BABYLON.Color3(0.15, 0.15, 0.2);
@@ -323,17 +469,16 @@
                         ground.material = groundMat;
                         ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5, friction: 0.5 }, scene);
 
-                        // 5. Incline (Ramp)
+                        // 5. Incline
                         const ramp = BABYLON.MeshBuilder.CreateBox("ramp", {width: 15, height: 1, depth: 30}, scene);
                         ramp.position = new BABYLON.Vector3(30, 4, 0); 
                         ramp.rotation.z = Math.PI / 8;
-                        
                         const rampMat = new BABYLON.StandardMaterial("rampMat", scene);
                         rampMat.diffuseColor = new BABYLON.Color3(0.25, 0.25, 0.3);
                         ramp.material = rampMat;
                         ramp.physicsImpostor = new BABYLON.PhysicsImpostor(ramp, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.2, friction: 0.4 }, scene);
 
-                        // 6. Pillars (New Environment Feature)
+                        // 6. Pillars
                         this.createPillars(scene);
 
                         // 7. Interaction
@@ -342,21 +487,61 @@
                         return scene;
                     },
 
+                    handleMobileInput: function() {
+                        if(selectedShape !== 'freecam' || !this.cameraFree) return;
+                        
+                        const cam = this.cameraFree;
+                        const moveSpeed = 1.0;
+                        const lookSpeed = 0.02;
+
+                        // MOVEMENT
+                        if(moveState.up) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Forward()).scale(moveSpeed));
+                        if(moveState.down) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Backward()).scale(moveSpeed));
+                        if(moveState.left) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Left()).scale(moveSpeed));
+                        if(moveState.right) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Right()).scale(moveSpeed));
+
+                        // LOOKING (Rotation)
+                        if(lookState.left) cam.rotation.y -= lookSpeed;
+                        if(lookState.right) cam.rotation.y += lookSpeed;
+                        if(lookState.up) cam.rotation.x -= lookSpeed;
+                        if(lookState.down) cam.rotation.x += lookSpeed;
+                    },
+
+                    switchCamera: function(toFreeCam) {
+                        if(!this.scene) return;
+                        
+                        this.cameraOrbit.detachControl();
+                        this.cameraFree.detachControl();
+
+                        if(toFreeCam) {
+                            this.cameraFree.position.copyFrom(this.cameraOrbit.position);
+                            const target = this.cameraOrbit.target.clone();
+                            this.cameraFree.setTarget(target);
+
+                            this.scene.activeCamera = this.cameraFree;
+                            this.cameraFree.attachControl(this.canvas, true);
+                        } else {
+                            this.cameraOrbit.position.copyFrom(this.cameraFree.position);
+                            const forward = this.cameraFree.getDirection(BABYLON.Vector3.Forward());
+                            const newTarget = this.cameraFree.position.add(forward.scale(20));
+                            this.cameraOrbit.setTarget(newTarget);
+
+                            this.scene.activeCamera = this.cameraOrbit;
+                            this.cameraOrbit.attachControl(this.canvas, true);
+                        }
+                    },
+
                     createPillars: function(scene) {
                         const mat = new BABYLON.StandardMaterial("pillarMat", scene);
                         mat.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.35);
 
-                        // Create 15 Random pillars
                         for(let i=0; i < 15; i++) {
                             const height = 10 + Math.random() * 15;
                             const size = 2 + Math.random() * 3;
                             const pillar = BABYLON.MeshBuilder.CreateBox("pillar" + i, {height: height, width: size, depth: size}, scene);
                             
-                            // Random position not too close to center
                             let x = (Math.random() - 0.5) * 160;
                             let z = (Math.random() - 0.5) * 160;
-                            
-                            // Keep clear area in middle
                             if(Math.abs(x) < 20 && Math.abs(z) < 20) { x += 40; }
 
                             pillar.position = new BABYLON.Vector3(x, height/2, z);
@@ -370,32 +555,56 @@
                             switch (pointerInfo.type) {
                                 case BABYLON.PointerEventTypes.POINTERDOWN:
                                     if(pointerInfo.event.button !== 0) return; 
-
-                                    // SAFETY: If tool is "none", do nothing
-                                    if(selectedShape === 'none') return;
+                                    if(selectedShape === 'freecam' || selectedShape === 'none') return;
 
                                     const pickInfo = pointerInfo.pickInfo;
-                                    
                                     if (pickInfo.hit && pickInfo.pickedMesh) {
+                                        const mesh = pickInfo.pickedMesh;
+
+                                        // FREEZE
+                                        if (selectedShape === 'freeze') {
+                                            if (!mesh.physicsImpostor || mesh.name === "ground" || mesh.name === "ramp") return;
+
+                                            if (freezeAction === 'freeze') {
+                                                if(!mesh.metadata) mesh.metadata = {};
+                                                if(mesh.physicsImpostor.mass > 0) {
+                                                    mesh.metadata.originalMass = mesh.physicsImpostor.mass;
+                                                    mesh.metadata.originalColor = mesh.material.diffuseColor.clone();
+                                                    mesh.metadata.originalEmissive = mesh.material.emissiveColor.clone();
+                                                    mesh.physicsImpostor.setMass(0);
+                                                    mesh.physicsImpostor.sleep();
+                                                    mesh.material.emissiveColor = new BABYLON.Color3(0.2, 0.6, 1); 
+                                                    mesh.material.diffuseColor = new BABYLON.Color3(0.5, 0.8, 1);
+                                                    mesh.material.alpha = 0.8;
+                                                }
+                                            } else {
+                                                if(mesh.metadata && mesh.metadata.originalMass) {
+                                                    mesh.physicsImpostor.setMass(mesh.metadata.originalMass);
+                                                    mesh.physicsImpostor.wakeUp();
+                                                    mesh.material.emissiveColor = mesh.metadata.originalEmissive;
+                                                    mesh.material.diffuseColor = mesh.metadata.originalColor;
+                                                    mesh.material.alpha = 1.0;
+                                                    mesh.metadata = null;
+                                                }
+                                            }
+                                            return;
+                                        }
                                         
-                                        // PUSH TOOL LOGIC
+                                        // PUSH
                                         if (selectedShape === 'push') {
-                                            // Don't push the ground or ramps (mass 0 objects usually)
-                                            if (pickInfo.pickedMesh.physicsImpostor && pickInfo.pickedMesh.physicsImpostor.mass > 0) {
-                                                // Calculate direction from camera to hit point
+                                            if (mesh.physicsImpostor && mesh.physicsImpostor.mass > 0) {
                                                 const ray = pickInfo.ray;
                                                 const forceDirection = ray.direction;
-                                                const forceMagnitude = 50; // Push strength
-                                                
-                                                pickInfo.pickedMesh.physicsImpostor.applyImpulse(
+                                                const forceMagnitude = 50; 
+                                                mesh.physicsImpostor.applyImpulse(
                                                     forceDirection.scale(forceMagnitude), 
                                                     pickInfo.pickedPoint
                                                 );
                                             }
-                                            return; // Stop here, don't spawn anything
+                                            return; 
                                         }
 
-                                        // SPAWN LOGIC
+                                        // SPAWN
                                         const normal = pickInfo.getNormal(true);
                                         if (normal) {
                                             const spawnPos = pickInfo.pickedPoint.add(normal.scale(0.6));
@@ -409,9 +618,8 @@
 
                     spawnObject: function(type, position, scene) {
                         let mesh;
-                        const mat = new BABYLON.StandardMaterial("objMat", scene);
+                        const mat = new BABYLON.StandardMaterial("objMat" + Date.now(), scene);
                         mat.diffuseColor = new BABYLON.Color3(Math.random(), Math.random(), Math.random());
-                        
                         const scale = Math.random() * 0.4 + 0.6; 
 
                         if (type === 'box') {
@@ -428,17 +636,12 @@
                         }
                         else if (type === 'bomb' || type === 'frag_bomb') {
                             mesh = BABYLON.MeshBuilder.CreateSphere("bomb", {diameter: 1.2}, scene);
-                            mat.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1); // Black
+                            mat.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1); 
                             mat.emissiveColor = new BABYLON.Color3(0.1, 0, 0); 
-                            
-                            // Fragment bomb looks slightly different (orange glow)
-                            if (type === 'frag_bomb') {
-                                mat.emissiveColor = new BABYLON.Color3(0.3, 0.1, 0); 
-                            }
+                            if (type === 'frag_bomb') mat.emissiveColor = new BABYLON.Color3(0.3, 0.1, 0); 
 
                             mesh.material = mat;
                             mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 3, restitution: 0.5, friction: 0.8 }, scene);
-                            
                             this.armBomb(mesh, scene, type === 'frag_bomb');
                         }
 
@@ -456,15 +659,9 @@
                         let flashCount = 0;
                         const flashInterval = setInterval(() => {
                             if(!bombMesh || bombMesh.isDisposed()) { clearInterval(flashInterval); return; }
-                            
-                            // Flash Logic
                             const colorOn = isFragment ? new BABYLON.Color3(1, 0.5, 0) : new BABYLON.Color3(1, 0, 0);
-                            
-                            if (flashCount % 2 === 0) {
-                                bombMesh.material.emissiveColor = colorOn;
-                            } else {
-                                bombMesh.material.emissiveColor = new BABYLON.Color3(0.1, 0, 0);
-                            }
+                            if (flashCount % 2 === 0) bombMesh.material.emissiveColor = colorOn;
+                            else bombMesh.material.emissiveColor = new BABYLON.Color3(0.1, 0, 0);
                             flashCount++;
                         }, 500);
 
@@ -478,7 +675,6 @@
                     },
 
                     explode: function(center, scene, isFragment) {
-                        // 1. Visual Effect
                         const explosion = BABYLON.MeshBuilder.CreateSphere("explosion", {diameter: 1}, scene);
                         explosion.position = center;
                         const expMat = new BABYLON.StandardMaterial("expMat", scene);
@@ -498,30 +694,24 @@
                             }
                         });
 
-                        // 2. Physics Impulse
                         const blastRadius = 25;
                         const blastForce = 60; 
-
                         spawnedMeshes.forEach(mesh => {
                             if (mesh && !mesh.isDisposed() && mesh.physicsImpostor) {
+                                if (mesh.metadata && mesh.metadata.originalMass) return;
                                 const dir = mesh.getAbsolutePosition().subtract(center);
                                 const dist = dir.length();
-
                                 if (dist < blastRadius) {
                                     dir.normalize();
                                     const forceMagnitude = blastForce * (1 - dist / blastRadius);
                                     const contactPoint = mesh.getAbsolutePosition();
                                     const impulse = dir.scale(forceMagnitude);
-                                    
                                     mesh.physicsImpostor.applyImpulse(impulse, contactPoint);
                                 }
                             }
                         });
 
-                        // 3. Spawn Fragments (If Fragment Bomb)
-                        if (isFragment) {
-                            this.spawnFragments(center, scene);
-                        }
+                        if (isFragment) this.spawnFragments(center, scene);
                     },
 
                     spawnFragments: function(center, scene) {
@@ -529,22 +719,16 @@
                         for(let i=0; i<numFrags; i++) {
                             const frag = BABYLON.MeshBuilder.CreateBox("frag", {size: 0.5}, scene);
                             frag.position = center.clone();
-                            // Offset slightly so they don't clip instantly
                             frag.position.y += 1;
                             frag.position.x += (Math.random() - 0.5);
                             frag.position.z += (Math.random() - 0.5);
-
                             const fMat = new BABYLON.StandardMaterial("fMat", scene);
                             fMat.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-                            fMat.emissiveColor = new BABYLON.Color3(0.8, 0.3, 0); // Burning debris look
+                            fMat.emissiveColor = new BABYLON.Color3(0.8, 0.3, 0); 
                             frag.material = fMat;
-
                             frag.physicsImpostor = new BABYLON.PhysicsImpostor(frag, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0.5, restitution: 0.1 }, scene);
-                            
-                            // Shoot fragment outwards
                             const exDir = new BABYLON.Vector3(Math.random()-0.5, Math.random(), Math.random()-0.5).normalize();
                             frag.physicsImpostor.applyImpulse(exDir.scale(12), frag.getAbsolutePosition());
-
                             spawnedMeshes.push(frag);
                         }
                     }
