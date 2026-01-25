@@ -139,7 +139,6 @@
         /* Color Coding */
         button#btn-none { border-left: 4px solid #aaa; }
         button#btn-push { border-left: 4px solid #2ecc71; }
-        button#btn-freecam { border-left: 4px solid #f1c40f; }
         button#btn-eraser { border-left: 4px solid #ff5252; }
         button#btn-view { border-left: 4px solid #9b59b6; }
         button#btn-freeze { border-left: 4px solid #3498db; }
@@ -179,10 +178,11 @@
         /* --- MOBILE VIRTUAL PADS --- */
         .mobile-pad {
             position: absolute; bottom: 30px; width: 120px; height: 120px; z-index: 10;
-            display: none; pointer-events: none;
+            display: grid; /* Always visible for FreeCam default */
+            pointer-events: none;
             grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 5px;
         }
-        .mobile-pad.visible { display: grid; }
+        
         #move-controls { left: 30px; }
         #look-controls { right: 30px; }
         
@@ -216,17 +216,11 @@
             </button>
             
             <div class="instruction">
-                <span id="txt-instruct">Left Click: Use Tool<br>Right Drag: Rotate Camera</span>
+                <span id="txt-instruct">WASD to Fly<br>Left Click: Use Tool<br>Right Drag: Look</span>
             </div>
 
             <div class="section-label">Actions</div>
             <div class="control-group">
-                <button id="btn-none" onclick="selectShape('none')">
-                    <span class="shape-icon icon-x">X</span> None
-                </button>
-                <button id="btn-freecam" onclick="selectShape('freecam')">
-                    <span class="shape-icon icon-cam"></span> FreeCam
-                </button>
                 <button id="btn-view" onclick="toggleViewMode()">
                     <span class="shape-icon icon-eye"></span> Possess Object
                 </button>
@@ -256,6 +250,13 @@
 
         <div class="panel-content">
             
+            <div class="section-label">Selection</div>
+            <div class="control-group">
+                 <button id="btn-none" onclick="selectShape('none')">
+                    <span class="shape-icon icon-x">X</span> None (Safe Mode)
+                </button>
+            </div>
+
             <div class="section-label">Properties</div>
             <div class="slider-group">
                 <div class="slider-label">
@@ -337,13 +338,25 @@
         const moveState = { up: false, down: false, left: false, right: false };
         const lookState = { up: false, down: false, left: false, right: false };
 
+        // --- KEYBOARD LISTENERS (Added for Desktop FreeCam) ---
+        window.addEventListener('keydown', (e) => {
+            if(e.key.toLowerCase() === 'w') moveState.up = true;
+            if(e.key.toLowerCase() === 's') moveState.down = true;
+            if(e.key.toLowerCase() === 'a') moveState.left = true;
+            if(e.key.toLowerCase() === 'd') moveState.right = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.key.toLowerCase() === 'w') moveState.up = false;
+            if(e.key.toLowerCase() === 's') moveState.down = false;
+            if(e.key.toLowerCase() === 'a') moveState.left = false;
+            if(e.key.toLowerCase() === 'd') moveState.right = false;
+        });
+
         // --- FULLSCREEN & ORIENTATION ---
         function enterGame() {
             const de = document.documentElement;
             if (de.requestFullscreen) de.requestFullscreen();
             else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen();
-            
-            // Try Locking Landscape (Works best in Chrome/Android)
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(() => {});
             }
@@ -396,9 +409,7 @@
             
             // UI References
             const instruct = document.getElementById('txt-instruct');
-            const movePad = document.getElementById('move-controls');
-            const lookPad = document.getElementById('look-controls');
-
+            
             // 1. Reset All Buttons
             document.querySelectorAll('button').forEach(b => {
                 if(b.id !== 'btn-build' && !b.classList.contains('btn-minimize') && b.id !== 'btn-enter-game') {
@@ -406,31 +417,18 @@
                 }
             });
 
-            // 2. Handle Special Modes (Camera)
-            if(shape === 'freecam') {
-                viewTargetMesh = null; 
-                workshop.shaman.sandbox3d.switchCamera(true);
-                instruct.innerHTML = "WASD / Arrows to Fly";
-                movePad.classList.add('visible');
-                lookPad.classList.add('visible');
-            } 
-            else if (shape === 'view') {
-                workshop.shaman.sandbox3d.switchCamera(true); 
+            // 2. Handle Special Modes
+            if (shape === 'view') {
+                workshop.shaman.sandbox3d.resetCameraTarget(); // Reset camera focus
                 instruct.innerHTML = "CLICK object to Possess.<br>Click 'Possess' again to Exit.";
-                movePad.classList.add('visible');
-                lookPad.classList.add('visible');
             }
             else {
-                // Standard Tool Mode
+                // Standard Tool Mode (Also defaults to free fly now)
                 viewTargetMesh = null;
-                workshop.shaman.sandbox3d.switchCamera(false); 
-                instruct.innerHTML = "Left Click: Use Tool<br>Right Drag: Rotate Camera";
-                movePad.classList.remove('visible');
-                lookPad.classList.remove('visible');
+                instruct.innerHTML = "WASD to Fly<br>Left Click: Use Tool<br>Right Drag: Look";
             }
 
             // 3. Highlight Active Button
-            // Helper to find button ID based on shape name
             let btnId = 'btn-' + shape;
             if (shape === 'cylinder') btnId = 'btn-cyl';
             if (shape === 'triangle') btnId = 'btn-tri';
@@ -478,11 +476,6 @@
             if(selectedShape === 'view') {
                 // Exit View Mode
                 viewTargetMesh = null;
-                const cam = workshop.shaman.sandbox3d.cameraFree;
-                if(cam) {
-                    cam.position.set(0, 30, -60);
-                    cam.setTarget(BABYLON.Vector3.Zero());
-                }
                 selectShape('box'); 
             } else {
                 selectShape('view');
@@ -531,8 +524,7 @@
                     canvas: document.getElementById("renderCanvas"),
                     engine: null,
                     scene: null,
-                    cameraOrbit: null,
-                    cameraFree: null,
+                    cameraFree: null, // Only one camera needed now
 
                     init: function() {
                         this.engine = new BABYLON.Engine(this.canvas, true);
@@ -551,14 +543,21 @@
                         const scene = new BABYLON.Scene(this.engine);
                         scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
 
-                        // 1. Cameras
-                        this.cameraOrbit = new BABYLON.ArcRotateCamera("CameraOrbit", -Math.PI/2, Math.PI/3.5, 67, BABYLON.Vector3.Zero(), scene);
-                        this.cameraOrbit.attachControl(this.canvas, true);
-                        this.cameraOrbit.wheelPrecision = 50;
-                        this.cameraOrbit.panningSensibility = 0; 
-
-                        this.cameraFree = new BABYLON.UniversalCamera("CameraFree", new BABYLON.Vector3(0, 30, -60), scene);
+                        // 1. Camera (Always Free/Universal)
+                        // Positioned slightly higher and back to give a good view
+                        this.cameraFree = new BABYLON.UniversalCamera("CameraFree", new BABYLON.Vector3(0, 20, -40), scene);
                         this.cameraFree.setTarget(BABYLON.Vector3.Zero());
+                        
+                        // We attach control but prevent default behavior so we can manage interaction (spawning vs looking)
+                        // By default Babylon Universal Camera uses Left Click to look. We want Right Click or Virtual Pads.
+                        // We remove the default keyboard keys (arrow keys) from Babylon to use our own handleInput or let them coexist.
+                        this.cameraFree.keysUp = [];
+                        this.cameraFree.keysDown = [];
+                        this.cameraFree.keysLeft = [];
+                        this.cameraFree.keysRight = [];
+                        
+                        // We manually handle rotation in handleInput, but we attach control to capture the canvas context
+                        this.cameraFree.attachControl(this.canvas, true);
                         
                         // 2. Lighting
                         const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
@@ -587,6 +586,12 @@
                         return scene;
                     },
 
+                    resetCameraTarget: function() {
+                        if(this.cameraFree) {
+                            // When exiting view mode, just stop momentum, don't snap back
+                        }
+                    },
+
                     handleKillZone: function() {
                         const killY = -100;
                         for(let i = spawnedMeshes.length - 1; i >= 0; i--) {
@@ -602,21 +607,22 @@
                     },
 
                     handleInput: function() {
-                        if(selectedShape !== 'freecam' && selectedShape !== 'view') return;
+                        // ALWAYS RUN INPUT LOGIC (Removed the check for selectedShape)
                         if(!this.cameraFree) return;
                         
                         const cam = this.cameraFree;
-                        const lookSpeed = 0.015;
+                        const lookSpeed = 0.02;
+                        const moveSpeed = 0.5;
 
-                        // Rotation
+                        // 1. Rotation (Pad or Mouse fallback if drag implemented manually)
                         if(lookState.left) cam.rotation.y -= lookSpeed;
                         if(lookState.right) cam.rotation.y += lookSpeed;
                         if(lookState.up) cam.rotation.x -= lookSpeed;
                         if(lookState.down) cam.rotation.x += lookSpeed;
 
-                        // Movement
+                        // 2. Movement Logic
                         if (selectedShape === 'view' && viewTargetMesh && viewTargetMesh.physicsImpostor) {
-                            // Possess Mode Logic
+                            // -- POSSESS MODE --
                             cam.position.copyFrom(viewTargetMesh.position);
                             cam.position.y += (3.0 * (currentSize || 1)); 
 
@@ -635,31 +641,13 @@
                             if(!impulse.equals(BABYLON.Vector3.Zero())) {
                                 viewTargetMesh.physicsImpostor.applyImpulse(impulse, viewTargetMesh.getAbsolutePosition());
                             }
-                        } else if (selectedShape === 'freecam') {
-                            // Freecam Logic
-                            const moveSpeed = 0.3;
+                        } else {
+                            // -- FREE FLY MODE -- (Default)
+                            // Apply movement based on camera direction
                             if(moveState.up) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Forward()).scale(moveSpeed));
                             if(moveState.down) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Backward()).scale(moveSpeed));
                             if(moveState.left) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Left()).scale(moveSpeed));
                             if(moveState.right) cam.position.addInPlace(cam.getDirection(BABYLON.Vector3.Right()).scale(moveSpeed));
-                        }
-                    },
-
-                    switchCamera: function(toFreeCam) {
-                        if(!this.scene) return;
-                        this.cameraOrbit.detachControl();
-                        this.cameraFree.detachControl();
-
-                        if(toFreeCam) {
-                            this.scene.activeCamera = this.cameraFree;
-                            this.cameraFree.attachControl(this.canvas, true);
-                        } else {
-                            this.cameraOrbit.position.copyFrom(this.cameraFree.position);
-                            const forward = this.cameraFree.getDirection(BABYLON.Vector3.Forward());
-                            const newTarget = this.cameraFree.position.add(forward.scale(20));
-                            this.cameraOrbit.setTarget(newTarget);
-                            this.scene.activeCamera = this.cameraOrbit;
-                            this.cameraOrbit.attachControl(this.canvas, true);
                         }
                     },
 
@@ -681,10 +669,39 @@
                     },
 
                     setupInteraction: function(scene) {
+                        // Mouse Drag to Look Logic
+                        let isDragging = false;
+                        let lastPointerX = 0;
+                        let lastPointerY = 0;
+
                         scene.onPointerObservable.add((pointerInfo) => {
+                            // 1. Handle Looking (Right Click or Drag)
                             if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-                                if(pointerInfo.event.button !== 0) return; 
-                                if(selectedShape === 'freecam' || selectedShape === 'none') return;
+                                if (pointerInfo.event.button === 2) { // Right Click
+                                    isDragging = true;
+                                    lastPointerX = pointerInfo.event.clientX;
+                                    lastPointerY = pointerInfo.event.clientY;
+                                }
+                            }
+                            else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERUP) {
+                                if (pointerInfo.event.button === 2) isDragging = false;
+                            }
+                            else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE && isDragging) {
+                                const dx = pointerInfo.event.clientX - lastPointerX;
+                                const dy = pointerInfo.event.clientY - lastPointerY;
+                                lastPointerX = pointerInfo.event.clientX;
+                                lastPointerY = pointerInfo.event.clientY;
+                                
+                                if(this.cameraFree) {
+                                    this.cameraFree.rotation.y += dx * 0.002;
+                                    this.cameraFree.rotation.x += dy * 0.002;
+                                }
+                            }
+
+                            // 2. Handle Spawning (Left Click)
+                            if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+                                if(pointerInfo.event.button !== 0) return; // Only Left Click
+                                if(selectedShape === 'none') return; // Safe Mode
 
                                 const pickInfo = pointerInfo.pickInfo;
                                 if (pickInfo.hit && pickInfo.pickedMesh) {
@@ -693,7 +710,7 @@
                                     if (selectedShape === 'view') {
                                         if (mesh.physicsImpostor && mesh.physicsImpostor.mass > 0) {
                                             viewTargetMesh = mesh;
-                                            document.getElementById('txt-instruct').innerHTML = "Controlling Object.<br>WASD to Move. Click Button to Exit.";
+                                            document.getElementById('txt-instruct').innerHTML = "Controlling Object.<br>WASD to Move. Click 'Possess' again to Exit.";
                                         }
                                         return;
                                     }
@@ -742,10 +759,15 @@
                                         }
                                         return; 
                                     }
+                                    
+                                    // Spawning logic (Now works while in freecam!)
                                     this.spawnObject(selectedShape, pickInfo, scene);
                                 }
                             }
                         });
+                        
+                        // Prevent context menu on right click
+                        window.addEventListener("contextmenu", e => e.preventDefault());
                     },
 
                     spawnObject: function(type, pickInfo, scene) {
@@ -774,7 +796,6 @@
                             mesh = BABYLON.MeshBuilder.CreateCylinder("cyl", {height: scale, diameter: scale/2}, scene);
                         }
                         else if (type === 'triangle') {
-                            // Triangular Prism (Cylinder with 3 tessellations)
                             mesh = BABYLON.MeshBuilder.CreateCylinder("tri", {height: scale, diameter: scale, tessellation: 3}, scene);
                         }
                         else if (type === 'bomb' || type === 'frag_bomb') {
@@ -795,7 +816,6 @@
                             } else if (type === 'sphere' || type.includes('bomb')) {
                                 mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.SphereImpostor, { mass: massVal, restitution: 0.4, friction: 0.5 }, scene);
                             } else if (type === 'cylinder' || type === 'triangle') {
-                                // Triangle prism works best with Cylinder Impostor
                                 mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: massVal, restitution: 0.1, friction: 0.8 }, scene);
                             }
 
