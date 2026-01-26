@@ -9,15 +9,17 @@
 
     <style>
         :root {
-            /* MD3 Tokens - Consistent with your other pages */
+            /* MD3 Color Tokens */
             --md-sys-color-primary: #0b57d0;
             --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-secondary-container: #d3e3fd;
+            --md-sys-color-on-secondary-container: #041e49;
             --md-sys-color-surface: #ffffff;
             --md-sys-color-surface-variant: #f0f4f9;
             --md-sys-color-background: #f8f9fa;
             --md-sys-color-outline: #747775;
+            
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-            --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -36,104 +38,149 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* Central Card */
-        .error-card {
-            background-color: var(--md-sys-color-surface);
-            border-radius: 24px;
-            padding: 48px 32px;
-            max-width: 480px;
+        /* --- Background Animation --- */
+        .bg-shape-container {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            z-index: -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hexagon-spinner {
+            width: 65vh;
+            height: 65vh;
+            color: var(--md-sys-color-primary);
+            opacity: 0.08;
+            animation: spin 12s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- Main Layout --- */
+        .container {
+            max-width: 450px;
+            width: 100%;
+            padding: 48px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            z-index: 1;
+            /* Glassmorphism */
+            background: rgba(248, 249, 250, 0.65);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            margin: 20px;
             text-align: center;
-            /* Subtle border instead of heavy shadow for a lighter feel */
-            border: 1px solid #e0e2e0; 
+        }
+
+        /* Header */
+        header {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
         }
 
-        /* Image Styling */
-        .image-container {
-            width: 200px;
-            height: 200px;
-            border-radius: 20px; /* Soft rounding */
+        .mascot-container {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 24px;
+            border-radius: 50%;
+            background-color: var(--md-sys-color-surface);
+            padding: 8px;
+            box-shadow: var(--md-elevation-1);
             overflow: hidden;
-            background-color: var(--md-sys-color-surface-variant);
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
+        
         .error-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 50%;
             transition: transform 0.4s ease;
         }
-        
-        .error-image:hover {
-            transform: scale(1.05);
+
+        .mascot-container:hover .error-image {
+            transform: scale(1.1);
         }
 
-        /* Typography */
-        .text-content h1 {
-            font-size: 24px;
+        h1 {
+            font-size: 28px;
             font-weight: 400;
             color: #1f1f1f;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
-        .text-content p {
+        .subtitle {
             font-size: 16px;
             color: #5e5e5e;
+            font-weight: 400;
             line-height: 1.5;
-            max-width: 300px;
-            margin: 0 auto;
         }
 
-        /* Action Button */
-        .btn-home {
-            display: inline-flex;
+        /* Primary Action */
+        .primary-action-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .fab-primary {
+            display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 12px;
             background-color: var(--md-sys-color-primary);
             color: var(--md-sys-color-on-primary);
+            padding: 16px 32px;
+            border-radius: 100px;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 100px; /* Pill shape */
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.25px;
-            transition: background-color 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: var(--md-elevation-1);
             border: none;
             cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 500;
             position: relative;
             overflow: hidden;
         }
 
-        .btn-home:hover {
+        .fab-primary:hover {
             background-color: #0842a0;
-            box-shadow: var(--md-elevation-1);
+            box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15);
         }
 
-        /* Footer inside card or outside? Outside looks cleaner for errors */
-        .footer-text {
-            margin-top: 32px;
-            font-size: 12px;
-            color: #757575;
-            font-weight: 500;
+        /* Footer */
+        footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: #8e918f;
         }
 
-        /* Ripple Effect */
+        /* Ripple */
         .ripple {
             position: absolute;
             border-radius: 50%;
             transform: scale(0);
             animation: ripple 0.6s linear;
-            background-color: rgba(255, 255, 255, 0.3); /* Lighter ripple for dark buttons */
+            background-color: rgba(255, 255, 255, 0.3);
             pointer-events: none;
         }
 
@@ -147,26 +194,40 @@
 </head>
 <body>
 
-    <div class="error-card">
-        <div class="image-container">
-            <img src="./bina/columbina.png" alt="Character Image" class="error-image">
-        </div>
-
-        <div class="text-content">
-            <h1>Unavailable</h1>
-            <p>Something is missing here...<br>Bina is wondering why.</p>
-        </div>
-
-        <a href="https://shamansworkshop.github.io" class="btn-home" onclick="createRipple(event)">
-            <i class="material-icons-round" style="font-size: 18px;">arrow_back</i>
-            Return to Workshop
-        </a>
+    <div class="bg-shape-container">
+        <svg class="hexagon-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
+                     fill="none" stroke="currentColor" stroke-width="1.5" />
+            <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
+                     fill="currentColor" opacity="0.5"/>
+        </svg>
     </div>
 
-    <p class="footer-text">Shaman's Workshop</p>
+    <div class="container">
+        
+        <header>
+            <div class="mascot-container">
+                <img src="./bina/columbina.png" alt="COLUMBINAAAA" class="error-image">
+            </div>
+            <h1>Unavailable</h1>
+            <div class="subtitle">Something is missing here...<br>Bina is wondering why.</div>
+        </header>
+
+        <div class="primary-action-container">
+            <a href="https://shamansworkshop.github.io" class="fab-primary" onclick="createRipple(event)">
+                <i class="material-icons-round">arrow_back</i>
+                <span>Return to Workshop</span>
+            </a>
+        </div>
+
+        <footer>
+            <p>Shaman's Workshop</p>
+        </footer>
+
+    </div>
 
     <script>
-        // 1. Logic for Random Images (Preserved from original)
+        // 1. Logic for Random Images
         const errorGifs = [
             './bina/columbina.png',
             './bina/columbina1.png',
@@ -175,20 +236,20 @@
             './bina/copium.png'
         ];
         
-        // Simple error handling in case images don't exist in dev environment
+        // Ensure image element exists before trying to set src
         const imgElement = document.querySelector('.error-image');
         if(imgElement) {
             const randomGif = errorGifs[Math.floor(Math.random() * errorGifs.length)];
             imgElement.src = randomGif;
         }
 
-        // 2. Material Ripple Effect Logic
+        // 2. Ripple Logic
         function createRipple(event) {
             const button = event.currentTarget;
+            
             const circle = document.createElement("span");
             const diameter = Math.max(button.clientWidth, button.clientHeight);
             const radius = diameter / 2;
-
             const rect = button.getBoundingClientRect();
 
             circle.style.width = circle.style.height = `${diameter}px`;
@@ -196,19 +257,12 @@
             circle.style.top = `${event.clientY - rect.top - radius}px`;
             circle.classList.add("ripple");
 
-            const ripple = button.getElementsByClassName("ripple")[0];
-            if (ripple) {
-                ripple.remove();
+            const existingRipple = button.getElementsByClassName("ripple")[0];
+            if (existingRipple) {
+                existingRipple.remove();
             }
 
             button.appendChild(circle);
-            
-            // Allow animation to play briefly before navigating
-            setTimeout(() => {
-                window.location.href = button.href;
-            }, 300);
-            
-            event.preventDefault(); // Stop default link behavior to allow ripple
         }
     </script>
 </body>
