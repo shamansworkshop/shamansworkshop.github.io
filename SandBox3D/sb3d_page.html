@@ -22,7 +22,7 @@
             --md-sys-color-outline: #747775;
             --md-sys-color-error-container: #ffdad6;
             --md-sys-color-on-error-container: #410002;
-            --md-sys-color-warning-container: #fff8c5; /* For Beta warning */
+            --md-sys-color-warning-container: #fff8c5;
             --md-sys-color-on-warning-container: #5c4d00;
             
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
@@ -44,6 +44,25 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-x: hidden; /* Prevent scrollbars during transition */
+        }
+
+        /* --- GAME CONTAINER (Hidden by default) --- */
+        #game-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 9999;
+            display: none;
+            background-color: #1a1a1a;
+        }
+
+        /* Utility class to hide UI when game runs */
+        body.game-running > *:not(#game-view) {
+            display: none !important;
         }
 
         /* Top Bar */
@@ -240,7 +259,7 @@
         </section>
 
         <div class="primary-action-container">
-            <a href="https://shamansworkshop.github.io/SandBox3D/SandBox3D.html" class="fab-extended" onclick="createRipple(event)">
+            <a href="#" class="fab-extended" onclick="launchSB3D(event)">
                 <span class="fab-title">
                     <i class="material-icons-round">rocket_launch</i>
                     Play Sand Box 3D
@@ -267,13 +286,12 @@
 
     </div>
 
-    <script>
+    <iframe id="game-view" allow="fullscreen; gyroscope; accelerometer; wake-lock"></iframe>
 
+    <script>
         // Material Ripple Effect
         function createRipple(event) {
-            // Only apply if clicking the element directly or bubbling correctly
             const button = event.currentTarget;
-            
             const circle = document.createElement("span");
             const diameter = Math.max(button.clientWidth, button.clientHeight);
             const radius = diameter / 2;
@@ -291,8 +309,43 @@
             }
 
             button.appendChild(circle);
-            
         }
+
+        // --- NEW: LAUNCH LOGIC ---
+        function launchSB3D(event) {
+            // 1. Stop standard link navigation
+            event.preventDefault();
+            createRipple(event);
+
+            // 2. Trigger Fullscreen (same as SB3D's internal logic)
+            const de = document.documentElement;
+            if (de.requestFullscreen) de.requestFullscreen();
+            else if (de.webkitRequestFullscreen) de.webkitRequestFullscreen();
+            
+            // 3. Attempt Landscape Lock
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+
+            // 4. Load the Game into the iframe and show it
+            const frame = document.getElementById('game-view');
+            // Using the live URL as per your original link
+            frame.src = "https://shamansworkshop.github.io/SandBox3D/SandBox3D.html"; 
+            frame.style.display = "block";
+
+            // 5. Hide the Launchpad UI to focus purely on the game
+            document.body.classList.add('game-running');
+        }
+
+        // Optional: If user presses ESC to exit fullscreen, reload or reset UI?
+        // Currently, we'll leave it as is, but a reload is usually safest to reset state.
+        document.addEventListener('fullscreenchange', (event) => {
+            if (!document.fullscreenElement) {
+                // If they exit fullscreen, reload the page to get back to a clean menu
+                window.location.reload();
+            }
+        });
+
     </script>
 </body>
-</html>
+</html>
