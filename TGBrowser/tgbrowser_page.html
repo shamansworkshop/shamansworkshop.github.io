@@ -22,11 +22,10 @@
             --md-sys-color-outline: #747775;
             --md-sys-color-error-container: #ffdad6;
             --md-sys-color-on-error-container: #410002;
-            --md-sys-color-warning-container: #fff8c5; /* For Beta warning */
+            --md-sys-color-warning-container: #fff8c5;
             --md-sys-color-on-warning-container: #5c4d00;
             
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-            --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -44,175 +43,179 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center; /* Center content vertically */
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* Top Bar */
-        header {
+        /* --- Background Animation --- */
+        .bg-shape-container {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 24px 20px;
-            background: var(--md-sys-color-surface);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            height: 100%;
+            z-index: -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hexagon-spinner {
+            width: 60vh; /* Responsive size based on viewport height */
+            height: 60vh;
+            color: var(--md-sys-color-primary);
+            opacity: 0.08; /* Very subtle */
+            animation: spin 10s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- Main Layout --- */
+        .container {
+            max-width: 600px; /* Narrower width for "Setup Screen" feel */
+            width: 100%;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center everything */
+            gap: 32px;
+            z-index: 1;
+            /* Glass effect to make text readable over spinner */
+            background: rgba(248, 249, 250, 0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+        }
+
+        /* Header / Logo Area */
+        header {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 8px;
+        }
+
+        /* Mimic the Google "G" logo or Product Icon space */
+        .logo-placeholder {
+            font-size: 48px;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 16px;
         }
 
         h1 {
-            font-size: 28px;
-            font-weight: 400;
-            margin-bottom: 4px;
+            font-size: 36px; /* Larger, bolder title */
+            font-weight: 400; /* Google Sans style often uses lighter weights for large text */
+            margin-bottom: 8px;
+            color: #1f1f1f;
         }
 
         .header-subtitle {
-            font-size: 14px;
+            font-size: 18px;
             color: #5e5e5e;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-        }
-
-        .container {
-            max-width: 800px;
-            width: 100%;
-            padding: 0 20px 60px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
+            font-weight: 400;
         }
 
         /* Hero Text */
         .hero-text {
             text-align: center;
-            margin-bottom: 16px;
         }
         .hero-text h2 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 400;
             color: #444746;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
-        /* Large Action Button (Stable) */
+        /* Primary Action (The "Next" button style) */
         .primary-action-container {
+            width: 100%;
             display: flex;
             justify-content: center;
-            margin-bottom: 16px;
         }
 
         .fab-extended {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Horizontal layout for pill shape */
             align-items: center;
             justify-content: center;
-            background-color: var(--md-sys-color-secondary-container);
-            color: var(--md-sys-color-on-secondary-container);
-            padding: 24px 48px;
-            border-radius: 24px;
+            gap: 16px;
+            background-color: var(--md-sys-color-primary); /* Solid Primary Color */
+            color: var(--md-sys-color-on-primary);
+            padding: 18px 32px;
+            border-radius: 50px; /* Full Pill Shape */
             text-decoration: none;
             transition: all 0.2s ease;
-            box-shadow: none;
-            text-align: center;
+            box-shadow: var(--md-elevation-1);
+            text-align: left;
             width: 100%;
-            max-width: 400px;
-            border: 1px solid transparent;
+            border: none;
             cursor: pointer;
             position: relative;
             overflow: hidden;
         }
 
         .fab-extended:hover {
-            background-color: #c2d7fc;
-            box-shadow: var(--md-elevation-1);
+            box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15);
+            background-color: #0842a0; /* Slightly darker on hover */
+        }
+
+        .fab-content {
+            display: flex;
+            flex-direction: column;
         }
 
         .fab-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            line-height: 1.2;
         }
         
         .fab-subtitle {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-top: 4px;
+            font-size: 12px;
+            opacity: 0.9;
+            font-weight: 400;
         }
 
-        /* Grid for Documentation */
-        .grid-section-title {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 12px;
-            margin-top: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .docs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        /* Documentation Links (Secondary Actions) */
+        .links-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 12px;
         }
 
-        .doc-card {
-            background-color: var(--md-sys-color-surface);
-            border: 1px solid #e0e2e0;
-            border-radius: 12px;
-            padding: 16px;
+        .text-link {
+            color: var(--md-sys-color-primary);
             text-decoration: none;
-            color: #1f1f1f;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: background-color 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .doc-card:hover {
-            background-color: var(--md-sys-color-surface-variant);
-            border-color: transparent;
-        }
-
-        .doc-icon {
-            color: #5e5e5e;
-            font-size: 24px;
-        }
-
-        .doc-text {
             font-size: 14px;
             font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        
+        .text-link:hover {
+            background-color: rgba(11, 87, 208, 0.08);
         }
 
-        /* Critical / Highlighted Card */
-        .doc-card.highlight {
-            background-color: var(--md-sys-color-error-container);
-            border-color: transparent;
-            color: var(--md-sys-color-on-error-container);
-        }
-        .doc-card.highlight:hover {
-            box-shadow: var(--md-elevation-1);
-        }
-        .doc-card.highlight .doc-icon {
-            color: var(--md-sys-color-on-error-container);
-        }
-
-        /* Beta Section */
+        /* Beta Section (Subtle toggle at bottom) */
         .beta-wrapper {
-            margin-top: 32px;
-            border-top: 1px solid #e0e2e0;
-            padding-top: 24px;
+            margin-top: 16px;
             text-align: center;
+            width: 100%;
         }
 
         .beta-toggle-btn {
             background: transparent;
-            border: 1px solid var(--md-sys-color-outline);
-            color: var(--md-sys-color-primary);
+            border: 1px solid #e0e2e0;
+            color: #444746;
             padding: 10px 24px;
             border-radius: 100px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             display: inline-flex;
@@ -222,7 +225,8 @@
         }
 
         .beta-toggle-btn:hover {
-            background-color: rgba(11, 87, 208, 0.08); /* Primary color with low opacity */
+            background-color: #f0f4f9;
+            border-color: var(--md-sys-color-outline);
         }
 
         .beta-content {
@@ -230,6 +234,10 @@
             margin-top: 20px;
             text-align: left;
             animation: slideDown 0.3s ease-out;
+            background: var(--md-sys-color-surface);
+            padding: 16px;
+            border-radius: 24px;
+            border: 1px solid #e0e2e0;
         }
 
         @keyframes slideDown {
@@ -239,18 +247,6 @@
 
         .beta-content.active {
             display: block;
-        }
-
-        .warning-card {
-            background-color: var(--md-sys-color-warning-container);
-            color: var(--md-sys-color-on-warning-container);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .beta-list {
@@ -263,10 +259,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px;
-            background-color: var(--md-sys-color-surface);
-            border: 1px solid #e0e2e0;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border-radius: 16px; /* Softer corners */
             text-decoration: none;
             color: #1f1f1f;
             transition: background 0.2s;
@@ -276,21 +270,11 @@
             background-color: var(--md-sys-color-surface-variant);
         }
 
-        .beta-version {
-            font-weight: 500;
-        }
-        .beta-tag {
-            font-size: 12px;
-            color: #5e5e5e;
-        }
-
         /* Footer */
         footer {
-            margin-top: auto;
-            text-align: center;
-            font-size: 12px;
-            color: #757575;
-            padding: 20px;
+            margin-top: 32px;
+            font-size: 11px;
+            color: #8e918f;
         }
 
         /* Ripple Effect */
@@ -299,8 +283,13 @@
             border-radius: 50%;
             transform: scale(0);
             animation: ripple 0.6s linear;
-            background-color: rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.3); /* White ripple for primary button */
             pointer-events: none;
+        }
+        
+        /* Dark ripple for light buttons */
+        .text-link .ripple, .beta-item .ripple {
+            background-color: rgba(0, 0, 0, 0.1);
         }
 
         @keyframes ripple {
@@ -313,102 +302,88 @@
 </head>
 <body>
 
-    <header>
-        <h1>TGBrowser</h1>
-        <div class="header-subtitle">Dedicated Loader</div>
-    </header>
+    <div class="bg-shape-container">
+        <svg class="hexagon-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     stroke-width="1.5" /> <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
+                     fill="currentColor" 
+                     opacity="0.5"/>
+        </svg>
+    </div>
 
     <div class="container">
 
+        <header>
+            <div class="logo-placeholder">
+                <i class="material-icons-round" style="font-size: 64px;">rocket_launch</i>
+            </div>
+            <h1>TGBrowser</h1>
+            <div class="header-subtitle">HEX Launcher v3</div>
+        </header>
+
         <section class="hero-text">
-            <h2>Open Source • Privacy-First • Modular</h2>
-            <h2>Now here at GitHub Pages</h2>
+            <h2>Secure. Modular. Open Source.<br>Ready to launch on GitHub Pages.</h2>
         </section>
 
         <div class="primary-action-container">
             <a href="https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/stable/tgbrowser_stable5.html" class="fab-extended" onclick="createRipple(event)">
-                <span class="fab-title">
-                    <i class="material-icons-round">rocket_launch</i>
-                    Load "Stable 5" Release
-                </span>
-                <span class="fab-subtitle">Version: v26.01.07d</span>
+                <i class="material-icons-round" style="font-size: 28px;">play_arrow</i>
+                <div class="fab-content">
+                    <span class="fab-title">Start Stable 5</span>
+                    <span class="fab-subtitle">Version v26.01.07d</span>
+                </div>
             </a>
         </div>
 
-        <div>
-            <div class="grid-section-title">Documentation & Help</div>
-            <div class="docs-grid">
-                
-                <a href="https://shamansworkshop.github.io/TGBrowser/tgb_info" class="doc-card" onclick="createRipple(event)">
-                    <i class="material-icons-round doc-icon">menu_book</i>
-                    <div class="doc-text">Release Notes</div>
-                </a>
-
-                <a href="https://shamansworkshop.github.io/TGBrowser/tgb_abtntrms" class="doc-card" onclick="createRipple(event)">
-                    <i class="material-icons-round doc-icon">info</i>
-                    <div class="doc-text">About / Terms & Conditions</div>
-                </a>
-
-                <a href="https://shamansworkshop.github.io/TGBrowser/tgb_tgplug" class="doc-card" onclick="createRipple(event)">
-                    <i class="material-icons-round doc-icon">extension</i>
-                    <div class="doc-text">TGPlug Dev Guide</div>
-                </a>
-
-                <a href="https://shamansworkshop.github.io/TGBrowser/tgb_tgmolink" class="doc-card highlight" onclick="createRipple(event)">
-                    <i class="material-icons-round doc-icon">whatshot</i>
-                    <div class="doc-text">
-                        <div>TGPlug Dev Guide</div>
-                        <div style="font-size: 11px; opacity: 0.8;">TGMOLINK EDITION</div>
-                    </div>
-                </a>
-
-            </div>
+        <div class="links-container">
+            <a href="https://shamansworkshop.github.io/TGBrowser/tgb_info" class="text-link">Release Notes</a>
+            <a href="https://shamansworkshop.github.io/TGBrowser/tgb_abtntrms" class="text-link">About & Terms</a>
+            <a href="https://shamansworkshop.github.io/TGBrowser/tgb_tgplug" class="text-link">Dev Guide</a>
+            <a href="https://shamansworkshop.github.io/TGBrowser/tgb_tgmolink" class="text-link" style="color: #b3261e;">Dev Guide (TGMoLink)</a>
         </div>
 
         <div class="beta-wrapper">
             <button class="beta-toggle-btn" onclick="toggleBeta()">
-                <i class="material-icons-round">science</i>
-                Try Beta Versions
+                <i class="material-icons-round" style="font-size: 16px;">science</i>
+                Advanced Options
             </button>
 
             <div class="beta-content" id="betaContent">
-                <div class="warning-card">
-                    <i class="material-icons-round">warning</i>
-                    <div><strong>Note:</strong> Beta releases are unstable and may break.</div>
+                <div style="font-size: 12px; color: #b3261e; margin-bottom: 12px; font-weight: 500;">
+                    <i class="material-icons-round" style="font-size: 12px; vertical-align: text-top;">warning</i>
+                    Beta releases may be unstable.
                 </div>
 
                 <div class="beta-list">
                     <a href="https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/beta/tgbrowser_beta6.html" class="beta-item" onclick="createRipple(event)">
-                        <div class="beta-version">v26.01.22a</div>
-                        <div class="beta-tag">Beta 6 (Latest)</div>
+                        <span style="font-weight: 500;">Beta 6</span>
+                        <span style="font-size: 12px; color: #5e5e5e;">v26.01.22a</span>
                     </a>
                     
                     <a href="https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/beta/tgbrowser_beta4.html" class="beta-item" onclick="createRipple(event)">
-                        <div class="beta-version">v25.12.20b-br1</div>
-                        <div class="beta-tag">Beta 4 (Leaving Soon...)</div>
+                        <span style="font-weight: 500;">Beta 4</span>
+                        <span style="font-size: 12px; color: #5e5e5e;">v25.12.20b-br1</span>
                     </a>
                 </div>
             </div>
         </div>
 
         <footer>
-            <p>2025 PROJECT TGBrowser by <strong>Shaman's Workshop</strong></p>
+            <p>2025 Shaman's Workshop</p>
         </footer>
 
     </div>
 
     <script>
-        // Toggle Beta visibility
         function toggleBeta() {
             const betaContent = document.getElementById('betaContent');
             betaContent.classList.toggle('active');
         }
 
-        // Material Ripple Effect
         function createRipple(event) {
-            // Only apply if clicking the element directly or bubbling correctly
             const button = event.currentTarget;
-            
             const circle = document.createElement("span");
             const diameter = Math.max(button.clientWidth, button.clientHeight);
             const radius = diameter / 2;
@@ -426,14 +401,7 @@
             }
 
             button.appendChild(circle);
-            
-            // Allow animation to play briefly before navigation (optional)
-            // Note: Standard anchor tags usually navigate immediately. 
-            // If you want to force the animation, you'd use preventDefault() and setTimeout.
         }
     </script>
 </body>
-
 </html>
-
-
