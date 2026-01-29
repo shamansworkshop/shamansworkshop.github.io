@@ -106,5 +106,3 @@ The creative spark generating breakthrough concepts and crafting unique TGPlugs 
 </div>
 
 ---
-
-*// ILY ALL* 💙
