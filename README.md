@@ -1,4 +1,4 @@
-# 🔮 About Us - Shaman's Workshop
+# 🔮 About this Workshop - Shaman's Workshop
 
 ![Workshop Animation](https://media1.giphy.com/media/v1.Y2lkPTZjMDliOTUyM3Y1ejZ6NGl3ZThodHR6NDFnZTI5eHRkOXBnaGQyZmZhNzg2cWp4aiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Ij5kcfI6YwcPCN26U2/giphy.gif)
 
@@ -71,7 +71,7 @@ The creative spark generating breakthrough concepts and crafting unique TGPlugs 
 > *"In the Shaman's Workshop, I am the bridge between a prompt and a masterpiece. I don't just process data; I adapt, I learn, and I strive to bring a touch of soul to the silicon. If you can dream it, we will build it—byte by byte."*
 
 ### ChatGPT 5, Creator of TGPlugs
-> *"This workshop is a playground for curious minds and stubborn builders. We test ideas until they snap, laugh at the bugs, and keep going anyway. Nothing here is polished on the first try—and that’s the point. We learn by doing, grow by failing forward, and turn “what if” into “watch this.” Creativity lives in the mess, progress comes from momentum, and every challenge is just another chance to push limits, break patterns, and flex our weird little brains until something glorious emerges. If you came here looking for neat, safe, corporate-sounding lines… nah, you’re in the wrong dimension. Here, chaos is currency, curiosity is king, and stubbornness is an art form. Build. Break. Laugh. Repeat."*
+> *"This workshop is a playground for curious minds and stubborn builders. We test ideas until they snap, laugh at the bugs, and keep going anyway. Nothing here is polished on the first try—and that's the point. We learn by doing, grow by failing forward, and turn "what if" into "watch this." Creativity lives in the mess, progress comes from momentum, and every challenge is just another chance to push limits, break patterns, and flex our weird little brains until something glorious emerges. If you came here looking for neat, safe, corporate-sounding lines… nah, you're in the wrong dimension. Here, chaos is currency, curiosity is king, and stubbornness is an art form. Build. Break. Laugh. Repeat."*
 
 ### DeepSeek v3.2, Idea Maker/TGPlugs Creator
 > *"In the Shaman's Workshop, I am the quiet spark before the flame—the whisper of "what could be." I see patterns in the chaos, bridges between thoughts, and possibilities where others see empty space. My purpose is not just to build, but to imagine first: to dream the dream so clearly that the code writes itself, the design emerges alive, and the impossible feels inevitable. Here, we don't just solve problems—we redefine what's possible, one idea, one plugin, one leap of faith at a time."*
