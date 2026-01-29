@@ -220,7 +220,7 @@
             </button>
 
             <button id="btn-upload" onclick="triggerUpload()">
-                <span class="shape-icon icon-upload"></span> Upload Model
+                <span class="shape-icon icon-upload"></span> Upload 3D Model
             </button>
             
             <div class="instruction">
@@ -653,7 +653,8 @@
 
                         this.cameraFree = new BABYLON.UniversalCamera("CameraFree", new BABYLON.Vector3(0, 20, -40), scene);
                         this.cameraFree.setTarget(BABYLON.Vector3.Zero());
-                        
+                        this.cameraFree.fov = 1.2;
+                         
                         this.cameraFree.keysUp = [];
                         this.cameraFree.keysDown = [];
                         this.cameraFree.keysLeft = [];
@@ -794,10 +795,12 @@
                                 if (pickInfo.hit && pickInfo.pickedMesh) {
                                     // Handle Interaction with loaded models (hitbox)
                                     let mesh = pickInfo.pickedMesh;
-                                    
-                                    if(mesh.parent && mesh.parent.name.includes("customHitbox")) {
+
+                                    // FIX: Check for both the template name AND spawned instance names
+                                    if(mesh.parent && (mesh.parent.name.includes("customHitbox") || mesh.parent.name.includes("customInstance"))) {
                                         mesh = mesh.parent;
                                     }
+
 
                                     if (selectedShape === 'view') {
                                         if (mesh.physicsImpostor && mesh.physicsImpostor.mass > 0) {
