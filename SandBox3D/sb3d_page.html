@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launchpad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        :root {
+            /* MD3 Color Tokens */
+            --md-sys-color-primary: #0b57d0;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-secondary-container: #d3e3fd;
+            --md-sys-color-on-secondary-container: #041e49;
+            --md-sys-color-tertiary-container: #ffd8e4;
+            --md-sys-color-on-tertiary-container: #31111d;
+            --md-sys-color-surface: #ffffff;
+            --md-sys-color-surface-variant: #f0f4f9;
+            --md-sys-color-background: #f8f9fa;
+            --md-sys-color-outline: #747775;
+            --md-sys-color-error-container: #ffdad6;
+            --md-sys-color-on-error-container: #410002;
+            --md-sys-color-warning-container: #fff8c5;
+            --md-sys-color-on-warning-container: #5c4d00;
+            
+            --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--md-sys-color-background);
+            color: #1f1f1f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center content vertically */
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* --- Background Animation --- */
+        .bg-shape-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hexagon-spinner {
+            width: 60vh; /* Responsive size based on viewport height */
+            height: 60vh;
+            color: var(--md-sys-color-primary);
+            opacity: 0.08; /* Very subtle */
+            animation: spin 10s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- Main Layout --- */
+        .container {
+            max-width: 600px; /* Narrower width for "Setup Screen" feel */
+            width: 100%;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center everything */
+            gap: 32px;
+            z-index: 1;
+            /* Glass effect to make text readable over spinner */
+            background: rgba(248, 249, 250, 0.6);
+            border-radius: 32px;
+        }
+
+        /* Header / Logo Area */
+        header {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        /* Mimic the Google "G" logo or Product Icon space */
+        .logo-placeholder {
+            font-size: 48px;
+            color: var(--md-sys-color-primary);
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 36px; /* Larger, bolder title */
+            font-weight: 400; /* Google Sans style often uses lighter weights for large text */
+            margin-bottom: 8px;
+            color: #1f1f1f;
+        }
+
+        .header-subtitle {
+            font-size: 18px;
+            color: #5e5e5e;
+            font-weight: 400;
+        }
+
+        /* Hero Text */
+        .hero-text {
+            text-align: center;
+        }
+        .hero-text h2 {
+            font-size: 16px;
+            font-weight: 400;
+            color: #444746;
+            line-height: 1.6;
+        }
+
+        /* Primary Action (The "Next" button style) */
+        .primary-action-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .fab-extended {
+            display: flex;
+            flex-direction: row; /* Horizontal layout for pill shape */
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background-color: var(--md-sys-color-primary); /* Solid Primary Color */
+            color: var(--md-sys-color-on-primary);
+            padding: 18px 32px;
+            border-radius: 50px; /* Full Pill Shape */
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: var(--md-elevation-1);
+            text-align: left;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fab-extended:hover {
+            box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15);
+            background-color: #0842a0; /* Slightly darker on hover */
+        }
+
+        .fab-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fab-title {
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+        
+        .fab-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        /* Documentation Links (Secondary Actions) */
+        .links-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .text-link {
+            color: var(--md-sys-color-primary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        
+        .text-link:hover {
+            background-color: rgba(11, 87, 208, 0.08);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 32px;
+            font-size: 11px;
+            color: #8e918f;
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.3); /* White ripple for primary button */
+            pointer-events: none;
+        }
+        
+        /* Dark ripple for light buttons */
+        .text-link .ripple, .beta-item .ripple {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-shape-container">
+        <svg class="hexagon-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
+                     fill="none" 
+                     stroke="currentColor" 
+                     stroke-width="1.5" /> <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
+                     fill="currentColor" 
+                     opacity="0.5"/>
+        </svg>
+    </div>
+
+    <div class="container">
+
+        <header>
+            <div class="logo-placeholder">
+                <i class="material-icons-round" style="font-size: 64px;">rocket_launch</i>
+            </div>
+            <h1>Sand Box 3D</h1>
+            <div class="header-subtitle">HEX Launcher v3</div>
+        </header>
+
+        <section class="hero-text">
+            <h2>Interactive 3D Physics Game<br>Ready to launch.</h2>
+        </section>
+
+        <div class="primary-action-container">
+            <a href="#" id="btn-launch" class="fab-extended" onclick="createRipple(event)">
+                <i class="material-icons-round" style="font-size: 28px;">play_arrow</i>
+                <div class="fab-content">
+                    <span class="fab-title">Play Sand Box 3D</span>
+                    <span class="fab-subtitle" id="version-text">Detecting Device...</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="links-container">
+            <a href="https://shamansworkshop.github.io/SandBox3D/sb3d_about.html" class="text-link">About Sand Box 3D</a>
+        </div>
+
+        <footer>
+            <p>2025-2026 Shaman's Workshop</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- DEVICE DETECTION & ROUTING ---
+        document.addEventListener("DOMContentLoaded", function() {
+            const btn = document.getElementById('btn-launch');
+            const versionText = document.getElementById('version-text');
+            
+            // Check for Mobile User Agent OR Small Screen Width
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 900;
+
+            if (isMobile) {
+                // Mobile Version
+                btn.href = "SandBox3D_Mobile.html";
+                versionText.innerText = "Mobile Edition (Touch)";
+            } else {
+                // PC Version
+                btn.href = "SandBox3D_PC.html";
+                versionText.innerText = "PC Edition (Mouse & Keyboard)";
+            }
+        });
+
+        // --- RIPPLE EFFECT ---
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+
+            const rect = button.getBoundingClientRect();
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - rect.left - radius}px`;
+            circle.style.top = `${event.clientY - rect.top - radius}px`;
+            circle.classList.add("ripple");
+
+            const ripple = button.getElementsByClassName("ripple")[0];
+            if (ripple) {
+                ripple.remove();
+            }
+
+            button.appendChild(circle);
+        }
+    </script>
+</body>
+</html>
