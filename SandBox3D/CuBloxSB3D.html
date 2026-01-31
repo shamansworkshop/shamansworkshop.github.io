@@ -733,54 +733,44 @@ function joinGame() {
 function setupConnectionEvent(c) { c.on('data', (data) => handleData(data, c)); }
 
 function handleData(data, senderConn) {
-        if (data.type === "join") {
-        // 1. Create the new player mesh if it doesn't exist
+    // 🛑 CRITICAL FIX: If the ID is missing or is YOUR OWN, drop the packet immediately.
+    // This stops the infinite loop that causes the freeze.
+    if (!data.id || data.id === myID) return;
+
+    if (data.type === "join") {
+        // Only create the mesh if it doesn't already exist in the workshop
         if (!players[data.id]) {
             players[data.id] = createPlayerMesh(data.id, new BABYLON.Vector3(0, 50, 0), data.color);
-            addSystemMessage(data.id + " joined the workshop.");
+            addSystemMessage(data.id + " has entered the realm.");
         }
 
         if (isHost) {
-            // 2. Tell everyone else about this new person
+            // Host: Tell other guests about this newcomer
             relayData(data, senderConn);
 
-            // 3. Send ONLY the Host's info back to the Guest
+            // Host: Send own identity back to the newcomer
             senderConn.send({ type: "join", id: myID, color: myColor });
 
-            // 4. Send existing players to the new Guest (Directly, no relay)
+            // Host: Sync all existing players to the new guest
             for (let pid in players) {
                 if (pid !== data.id && pid !== myID) {
-                    senderConn.send({ type: "join", id: pid, color: { top: "#aaa", bot: "#555" } });
+                    senderConn.send({ type: "join", id: pid, color: { top: "#555", bot: "#333" } });
                 }
             }
         }
     }
 
     if (data.type === "move") {
-        if (data.id === myID) return;
-        let p = players[data.id];
-        if (!p) {
-            players[data.id] = createPlayerMesh(data.id, new BABYLON.Vector3(data.pos.x, data.pos.y, data.pos.z));
-            p = players[data.id];
-        }
-        p.position = new BABYLON.Vector3(data.pos.x, data.pos.y, data.pos.z);
-        if (data.rot) p.rotation = new BABYLON.Vector3(data.rot.x, data.rot.y, data.rot.z);
+        if (!players[data.id]) return; // Don't move players who haven't "joined" yet
         
-        const body = p.bodyMesh;
-        if(data.anim) {
-             if (data.anim.grounded && data.anim.moving) {
-                p.animState.walkTime += 0.3;
-                body.rotation.z = Math.sin(p.animState.walkTime) * 0.1;
-                body.position.y = Math.abs(Math.sin(p.animState.walkTime)) * 0.2;
-            } else if (data.anim.grounded) {
-                 body.rotation.z *= 0.8; body.position.y *= 0.8;
-            } else {
-                 body.rotation.x += 0.15;
-            }
+        players[data.id].position = new BABYLON.Vector3(data.pos.x, data.pos.y, data.pos.z);
+        if (data.rot) {
+            players[data.id].rotation = new BABYLON.Vector3(data.rot.x, data.rot.y, data.rot.z);
         }
+        
         if (isHost) relayData(data, senderConn);
     }
-    
+
     if (data.type === "chat") {
         addChatMessage(data.id, data.msg);
         if (players[data.id]) players[data.id].showChat(data.msg);
