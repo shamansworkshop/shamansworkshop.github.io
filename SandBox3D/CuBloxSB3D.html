@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CuBlox SB3D</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <style>
+        /* --- CSS STYLING --- */
+        body, html { 
+            margin: 0; padding: 0; 
+            overflow: hidden; 
+            width: 100%; height: 100%;
+            background: #111; color: white; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            user-select: none;
+        }
+        
+        #renderCanvas { 
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; 
+            touch-action: none; outline: none; z-index: 0;
+        }
+        
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        
+        /* Connection Panel */
+        #connection-panel { 
+            pointer-events: auto; background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            text-align: center; border: 1px solid #00d2ff; z-index: 50; box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            width: 300px;
+        }
+        
+        /* Standard Inputs */
+        input[type="text"], input[type="number"] { 
+            padding: 8px; border-radius: 4px; border: 1px solid #444; 
+            background: #222; color: white; margin: 5px; outline: none; width: 60%;
+        }
+        
+        /* Color Pickers */
+        .color-row { display: flex; justify-content: center; gap: 10px; margin: 10px 0; align-items: center; }
+        input[type="color"] { border: none; width: 40px; height: 40px; cursor: pointer; background: none; padding: 0; }
+
+        .btn-std { 
+            padding: 10px 20px; border-radius: 4px; border: none; 
+            background: #00d2ff; color: #000; font-weight: bold; 
+            cursor: pointer; margin: 10px 5px; transition: 0.1s; width: 40%;
+        }
+        .btn-std:hover { background: #fff; }
+        .btn-std:active { transform: scale(0.98); }
+
+        /* Settings Panel - NO ANIMATIONS */
+        .ui-panel-base {
+            pointer-events: auto; position: absolute; right: 10px; top: 10px;
+            width: 280px; background: rgba(20, 20, 20, 0.98);
+            border-radius: 0; /* Boxy look */
+            padding: 10px; color: #eee; border: 1px solid #444;
+            max-height: 90vh; overflow-y: auto;
+            /* Transition removed for instant response */
+        }
+        
+        .ui-panel-base.minimized {
+            width: 160px; height: 36px; overflow: hidden; padding: 0 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ui-panel-base.minimized .panel-content { display: none; }
+        .ui-panel-base.minimized .panel-header { border-bottom: none; margin-bottom: 0; padding-bottom: 0; width: 100%; }
+        
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 10px;
+        }
+        .panel-header h2 { margin: 0; font-size: 14px; color: #00d2ff; text-transform: uppercase; letter-spacing: 1px; }
+
+        .btn-minimize {
+            background: #333; border: 1px solid #555; color: white;
+            width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: bold;
+        }
+
+        .setting-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 6px; }
+        
+        /* Toggles */
+        .switch { position: relative; display: inline-block; width: 30px; height: 16px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-toggle { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; }
+        .slider-toggle:before { position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px; background-color: white; transition: 0.1s; }
+        input:checked + .slider-toggle { background-color: #00d2ff; }
+        input:checked + .slider-toggle:before { transform: translateX(14px); }
+        
+        input[type=range] { width: 100px; cursor: pointer; accent-color: #00d2ff; }
+
+        #btn-fullscreen {
+            width: 100%; background: #27ae60; color: white; border: none; padding: 8px; 
+            font-weight: bold; cursor: pointer; margin-bottom: 10px; font-size: 12px;
+        }
+
+        /* Chat */
+        #chat-container { pointer-events: auto; position: absolute; top: 10px; left: 10px; width: 300px; height: 200px; display: flex; flex-direction: column; z-index: 15; }
+        #chat-history { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 5px; margin-bottom: 5px; font-size: 14px; text-shadow: 1px 1px 1px black; font-family: monospace;}
+        #chat-input { background: rgba(255,255,255,0.9); color: black; border: none; width: 100%; box-sizing: border-box;}
+        
+        /* Mobile Controls */
+        .touch-controls { pointer-events: auto; position: absolute; bottom: 20px; display: none; z-index: 20; }
+        #dpad { left: 20px; width: 120px; height: 120px; position: relative; }
+        .d-btn { position: absolute; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); }
+        .d-btn:active { background: rgba(255,255,255,0.6); }
+        #btn-up { top: 0; left: 40px; }
+        #btn-down { bottom: 0; left: 40px; }
+        #btn-left { top: 40px; left: 0; }
+        #btn-right { top: 40px; right: 0; }
+        
+        #action-zone { right: 20px; bottom: 20px; }
+        #btn-jump { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,50,50,0.4); border: 2px solid rgba(255,100,100,0.8); color: white; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; user-select: none;}
+        #btn-jump:active { background: rgba(255,50,50,0.8); }
+
+        hr { border: 0; border-top: 1px solid #444; width: 100%; margin: 8px 0; }
+        .section-title { font-size: 10px; color: #888; font-weight: bold; text-transform: uppercase; margin: 5px 0; }
+    </style>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+    <canvas id="renderCanvas"></canvas>
+
+    <div id="ui-layer">
+        
+        <div id="settings-panel" class="ui-panel-base minimized">
+            <div class="panel-header">
+                <h2>System</h2>
+                <button class="btn-minimize" id="btn-toggle-ui" onclick="toggleSettingsUI()">+</button>
+            </div>
+            
+            <div class="panel-content">
+                <button id="btn-fullscreen" onclick="enterFullscreen()">⛶ FULLSCREEN</button>
+                
+                <div class="section-title">Visuals</div>
+                
+                <div class="setting-row">
+                    <span>Shadows</span>
+                    <label class="switch"><input type="checkbox" id="opt-shadows" onchange="updateSettings()"><span class="slider-toggle"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span>God Rays (Sun)</span>
+                    <label class="switch"><input type="checkbox" id="opt-godrays" onchange="updateSettings()"><span class="slider-toggle"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span>Bloom</span>
+                    <label class="switch"><input type="checkbox" id="opt-bloom" onchange="updateSettings()"><span class="slider-toggle"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span>FXAA (Smooth)</span>
+                    <label class="switch"><input type="checkbox" id="opt-fxaa" onchange="updateSettings()"><span class="slider-toggle"></span></label>
+                </div>
+                <div class="setting-row">
+                    <span>Tone Mapping</span>
+                    <label class="switch"><input type="checkbox" id="opt-tone" checked onchange="updateSettings()"><span class="slider-toggle"></span></label>
+                </div>
+
+                <div class="section-title">Environment</div>
+                <div class="setting-row">
+                    <span>Time (0-2400)</span>
+                    <input type="number" id="opt-time" min="0" max="2400" value="1200" style="width: 50px;" oninput="updateSettings()">
+                </div>
+                <div class="setting-row">
+                    <span>Fog Density</span>
+                    <input type="range" id="opt-fog" min="0" max="100" value="30" oninput="updateSettings()">
+                </div>
+
+                <div class="section-title">Camera</div>
+                <div class="setting-row">
+                    <span>FOV</span>
+                    <input type="range" id="opt-fov" min="50" max="120" value="80" oninput="updateSettings()">
+                </div>
+                <div class="setting-row">
+                    <span>View Dist</span>
+                    <input type="range" id="opt-view" min="50" max="500" value="200" oninput="updateSettings()">
+                </div>
+
+                <hr>
+                <div class="setting-row">
+                    <span>Res Scale: <span id="res-val">100%</span></span>
+                    <input type="range" id="opt-res" min="25" max="100" value="100" step="25" oninput="updateSettings()">
+                </div>
+            </div>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-history"></div>
+            <input type="text" id="chat-input" placeholder="Type here...">
+        </div>
+
+        <div id="connection-panel">
+            <h2 style="margin:0 0 10px 0; color:#00d2ff;">CUBLOX v3.4</h2>
+            
+            <p style="font-size: 12px; color:#aaa; margin-bottom: 5px;">Player Customization</p>
+            <input type="text" id="my-id" placeholder="Username" style="width: 80%;">
+            
+            <div class="color-row">
+                <span style="font-size:12px;">Gradient:</span>
+                <input type="color" id="col-start" value="#ff9900" title="Top Color">
+                <span style="font-size:16px;">➡</span>
+                <input type="color" id="col-end" value="#ff0000" title="Bottom Color">
+            </div>
+
+            <hr>
+            <button class="btn-std" onclick="startHost()">Host</button>
+            <button class="btn-std" onclick="joinGame()">Join</button>
+            <br>
+            <input type="text" id="host-id" placeholder="Host ID to join" style="margin-top:10px; width: 80%;">
+        </div>
+
+        <div id="dpad" class="touch-controls">
+            <div class="d-btn" id="btn-up"></div>
+            <div class="d-btn" id="btn-down"></div>
+            <div class="d-btn" id="btn-left"></div>
+            <div class="d-btn" id="btn-right"></div>
+        </div>
+        <div id="action-zone" class="touch-controls">
+            <div id="btn-jump">JUMP</div>
+        </div>
+    </div>
+
+<script>
+/**
+ * 🛠️ SHAMAN'S WORKSHOP - PROJECT: CUBLOX v3.4
+ * Updates: Procedural Animations, Gradient Skins, Advanced Graphics Pipeline.
+ */
+
+// --- 1. ENGINE & SCENE SETUP ---
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
+let scene, camera, myPlayerMesh;
+let ground, shadowGenerator, pipeline, godRays;
+let sunMesh; // Helper mesh for God Rays
+
+// Game State
+let players = {}; 
+let inputs = { up: false, down: false, left: false, right: false, jump: false };
+let isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let treeColliders = []; 
+let myColor = { top: "#ff9900", bot: "#ff0000" };
+
+// Network
+let peer, conn, connections = [], myID = "", isHost = false;
+
+const createScene = () => {
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color3(0.5, 0.7, 1); 
+    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+    scene.fogDensity = 0.003;
+    scene.fogColor = new BABYLON.Color3(0.5, 0.7, 1);
+
+    // --- CAMERA ---
+    camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI / 2, 1.2, 20, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
+    camera.upperBetaLimit = Math.PI / 2 - 0.05; 
+    camera.lowerRadiusLimit = 5;
+    camera.upperRadiusLimit = 40;
+    camera.checkCollisions = true;
+    camera.collisionRadius = new BABYLON.Vector3(0.5, 0.5, 0.5);
+
+    // --- LIGHTING ---
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.6;
+    
+    // Sun (Directional)
+    const dirLight = new BABYLON.DirectionalLight("dirLight", new BABYLON.Vector3(-0.5, -1, -0.5), scene);
+    dirLight.position = new BABYLON.Vector3(50, 100, 50);
+    dirLight.intensity = 1.2;
+
+    // Sun Mesh (Invisible source for God Rays)
+    sunMesh = BABYLON.MeshBuilder.CreateSphere("sunMesh", {diameter: 10}, scene);
+    sunMesh.position = dirLight.position.scale(5); // Far away
+    const sunMat = new BABYLON.StandardMaterial("sunMat", scene);
+    sunMat.emissiveColor = new BABYLON.Color3(1, 1, 0.8);
+    sunMat.disableLighting = true;
+    sunMesh.material = sunMat;
+
+    // Shadows
+    shadowGenerator = new BABYLON.ShadowGenerator(2048, dirLight);
+    shadowGenerator.useBlurExponentialShadowMap = true;
+    shadowGenerator.blurKernel = 32;
+    dirLight.shadowEnabled = false; // Off by default
+
+    // --- RENDERING PIPELINE (Post Processing) ---
+    pipeline = new BABYLON.DefaultRenderingPipeline("pipeline", true, scene, [camera]);
+    pipeline.samples = 1; // Antialiasing off by default
+    pipeline.fxaaEnabled = false;
+    pipeline.bloomEnabled = false;
+    pipeline.bloomThreshold = 0.8;
+    pipeline.bloomWeight = 0.3;
+    pipeline.bloomKernel = 64;
+    
+    // Tone Mapping (Better Colors)
+    pipeline.imageProcessing.toneMappingEnabled = true;
+    pipeline.imageProcessing.contrast = 1.2;
+    pipeline.imageProcessing.exposure = 1.0;
+
+    // God Rays (Volumetric Light)
+    godRays = new BABYLON.VolumetricLightScatteringPostProcess("godrays", 1.0, camera, sunMesh, 50, BABYLON.Texture.BILINEAR_SAMPLINGMODE, engine, false);
+    godRays.exposure = 0.2;
+    godRays.decay = 0.96815;
+    godRays.weight = 0.5;
+    godRays.density = 0.8;
+    // Detach initially to save perf
+    scene.postProcesses = scene.postProcesses.filter(pp => pp !== godRays);
+
+    // --- TERRAIN ---
+    const grassMat = new BABYLON.StandardMaterial("grassMat", scene);
+    grassMat.diffuseColor = new BABYLON.Color3(0.2, 0.5, 0.2);
+    grassMat.specularColor = new BABYLON.Color3(0,0,0); 
+
+    ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", 
+        "https://playground.babylonjs.com/textures/heightMap.png", 
+        { width: 400, height: 400, subdivisions: 60, minHeight: 0, maxHeight: 40 }, 
+        scene
+    );
+    ground.material = grassMat;
+    ground.checkCollisions = true;
+    ground.receiveShadows = true;
+
+    createCleanBorder(scene);
+
+    return scene;
+};
+
+// "Clean" Border Generator
+function createCleanBorder(scene) {
+    const logMat = new BABYLON.StandardMaterial("logMat", scene);
+    logMat.diffuseColor = new BABYLON.Color3(0.3, 0.2, 0.1);
+    const leafMat = new BABYLON.StandardMaterial("leafMat", scene);
+    leafMat.diffuseColor = new BABYLON.Color3(0.05, 0.25, 0.05);
+
+    const baseTrunk = BABYLON.MeshBuilder.CreateCylinder("trunk", {height:4, diameter:1}, scene);
+    baseTrunk.material = logMat;
+    baseTrunk.isVisible = false; 
+    const baseLeaves = BABYLON.MeshBuilder.CreateCylinder("leaves", {diameterTop:0, diameterBottom:4, height:6}, scene);
+    baseLeaves.position.y = 4;
+    baseLeaves.material = leafMat;
+    baseLeaves.isVisible = false; 
+    
+    const masterTree = BABYLON.Mesh.MergeMeshes([baseTrunk, baseLeaves], true, true, undefined, false, true);
+    masterTree.name = "masterTree";
+    masterTree.isVisible = false;
+
+    const range = 195; const step = 8;    
+    for (let x = -range; x <= range; x += step) {
+        placeTree(masterTree, x, -range); placeTree(masterTree, x, range);  
+    }
+    for (let z = -range + step; z < range; z += step) {
+        placeTree(masterTree, -range, z); placeTree(masterTree, range, z);  
+    }
+}
+function placeTree(master, x, z) {
+    const instance = master.createInstance("borderTree");
+    instance.position = new BABYLON.Vector3(x, 0, z);
+    instance.rotation.y = Math.random() * Math.PI * 2;
+    instance.scaling = new BABYLON.Vector3(0.8 + Math.random()*0.4, 0.8 + Math.random()*0.4, 0.8 + Math.random()*0.4);
+    treeColliders.push({ x: x, z: z, radius: 2 });
+}
+
+scene = createScene();
+
+// --- 2. SETTINGS & UI ---
+function toggleSettingsUI() {
+    const panel = document.getElementById('settings-panel');
+    const btn = document.getElementById('btn-toggle-ui');
+    if (panel.classList.contains('minimized')) {
+        panel.classList.remove('minimized'); btn.innerText = "-";
+    } else {
+        panel.classList.add('minimized'); btn.innerText = "+";
+    }
+}
+
+function enterFullscreen() {
+    const de = document.documentElement;
+    if (de.requestFullscreen) de.requestFullscreen();
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+    }
+    setTimeout(() => { engine.resize(); }, 200);
+}
+
+function updateSettings() {
+    // 1. Shadows
+    const dirLight = scene.getLightByName("dirLight");
+    if(dirLight) dirLight.shadowEnabled = document.getElementById("opt-shadows").checked;
+
+    // 2. Post Processing
+    pipeline.bloomEnabled = document.getElementById("opt-bloom").checked;
+    pipeline.fxaaEnabled = document.getElementById("opt-fxaa").checked;
+    pipeline.imageProcessing.toneMappingEnabled = document.getElementById("opt-tone").checked;
+
+    // 3. God Rays
+    const raysOn = document.getElementById("opt-godrays").checked;
+    const hasRays = scene.postProcesses.includes(godRays);
+    if(raysOn && !hasRays) scene.postProcesses.push(godRays);
+    else if(!raysOn && hasRays) scene.postProcesses = scene.postProcesses.filter(pp => pp !== godRays);
+
+    // 4. Time
+    const rawTime = parseInt(document.getElementById("opt-time").value) || 1200;
+    // Map 0-2400 to 0-2PI
+    const angle = (rawTime / 2400) * (Math.PI * 2); 
+    // Shift so 1200 (Noon) is directly up
+    const adjustedAngle = angle - (Math.PI / 2);
+
+    if(dirLight) {
+        const x = Math.cos(adjustedAngle);
+        const y = -Math.sin(adjustedAngle); // Negative because light points DOWN
+        dirLight.direction = new BABYLON.Vector3(x, y, 0.2).normalize();
+        // Move sun mesh
+        sunMesh.position = dirLight.direction.scale(-200);
+        
+        // Sky/Fog Color based on height
+        let intensity = Math.max(0, y); // 0 at night, 1 at noon
+        scene.clearColor = new BABYLON.Color3(0.1 + 0.4*intensity, 0.1 + 0.7*intensity, 0.2 + 0.8*intensity);
+        scene.fogColor = scene.clearColor;
+        dirLight.intensity = Math.max(0.1, intensity * 1.5);
+    }
+
+    // 5. Fog & Camera
+    scene.fogDensity = document.getElementById("opt-fog").value / 10000;
+    if(camera) {
+        camera.fov = (document.getElementById("opt-fov").value * Math.PI) / 180;
+        camera.maxZ = parseInt(document.getElementById("opt-view").value);
+    }
+
+    // 6. Res Scale
+    const resVal = parseInt(document.getElementById("opt-res").value);
+    document.getElementById("res-val").innerText = resVal + "%";
+    engine.setHardwareScalingLevel(100 / resVal);
+}
+
+// --- 3. PLAYER & ANIMATION SYSTEM ---
+
+function createGradientTexture(name, topColor, botColor) {
+    const tex = new BABYLON.DynamicTexture(name, {width: 64, height: 64}, scene);
+    const ctx = tex.getContext();
+    const grad = ctx.createLinearGradient(0, 0, 0, 64);
+    grad.addColorStop(0, topColor);
+    grad.addColorStop(1, botColor);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    tex.update();
+    return tex;
+}
+
+function createPlayerMesh(id, position, colorData) {
+    // Parent Pivot for Logic
+    const root = new BABYLON.TransformNode("root_" + id, scene);
+    root.position = position || new BABYLON.Vector3(0, 50, 0);
+
+    // The Visible Body (Child of Root) - Allows for local animation rotation without messing up movement logic
+    const body = BABYLON.MeshBuilder.CreateBox("body_" + id, {size: 1.5}, scene);
+    body.parent = root;
+    body.position.y = 0; // Centered on root
+
+    const mat = new BABYLON.StandardMaterial("skin_" + id, scene);
+    
+    // Apply Gradient
+    const cData = colorData || { top: "#ff9900", bot: "#ff0000" }; // Default Orange
+    mat.diffuseTexture = createGradientTexture("grad_" + id, cData.top, cData.bot);
+    
+    mat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+    body.material = mat;
+
+    if (shadowGenerator) shadowGenerator.addShadowCaster(body);
+
+    // Face
+    const facePlane = BABYLON.MeshBuilder.CreatePlane("face_" + id, {size: 1}, scene);
+    facePlane.parent = body;
+    facePlane.position.z = 0.76;
+    const faceTex = new BABYLON.DynamicTexture("faceTex_" + id, {width:256, height:256}, scene);
+    const faceMat = new BABYLON.StandardMaterial("faceMat_" + id, scene);
+    faceMat.diffuseTexture = faceTex;
+    faceMat.emissiveColor = new BABYLON.Color3(1,1,1);
+    faceTex.hasAlpha = true;
+    facePlane.material = faceMat;
+
+    // Draw Face Helper
+    const drawFace = (expr) => {
+        const ctx = faceTex.getContext();
+        ctx.clearRect(0,0,256,256);
+        ctx.fillStyle = "black";
+        if (expr === "happy") {
+            ctx.fillRect(60, 80, 40, 40); ctx.fillRect(156, 80, 40, 40);
+            ctx.beginPath(); ctx.arc(128, 160, 60, 0, Math.PI, false); ctx.lineWidth = 15; ctx.stroke();
+        } else if (expr === "jump") {
+            ctx.fillRect(60, 60, 40, 40); ctx.fillRect(156, 60, 40, 40);
+            ctx.beginPath(); ctx.arc(128, 170, 30, 0, Math.PI * 2, false); ctx.fill();
+        }
+        faceTex.update();
+    };
+    drawFace("happy");
+
+    // Nametag
+    const namePlane = BABYLON.MeshBuilder.CreatePlane("name_" + id, {width: 4, height: 1}, scene);
+    namePlane.parent = root; // Attach to root so it doesn't spin with the body
+    namePlane.position.y = 1.3;
+    namePlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+    const nameTex = new BABYLON.DynamicTexture("nameTex_" + id, {width: 512, height: 128}, scene);
+    const nameMat = new BABYLON.StandardMaterial("nameMat_" + id, scene);
+    nameMat.diffuseTexture = nameTex;
+    nameMat.emissiveColor = new BABYLON.Color3(1,1,1);
+    nameTex.hasAlpha = true;
+    namePlane.material = nameMat;
+    nameTex.getContext().font = "bold 60px monospace";
+    nameTex.getContext().fillStyle = "white";
+    nameTex.getContext().textAlign = "center";
+    nameTex.getContext().fillText(id, 256, 80);
+    nameTex.update();
+
+    // Attach Methods to Root
+    root.bodyMesh = body;
+    root.drawFace = drawFace;
+    root.animState = { walkTime: 0, isGrounded: false, vy: 0 };
+    
+    // Chat Bubble
+    const bubblePlane = BABYLON.MeshBuilder.CreatePlane("bubble_" + id, {width: 6, height: 2}, scene);
+    bubblePlane.parent = root;
+    bubblePlane.position.y = 2.5;
+    bubblePlane.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+    bubblePlane.isVisible = false;
+    const bubbleTex = new BABYLON.DynamicTexture("bubbleTex_" + id, {width: 512, height: 256}, scene);
+    const bubbleMat = new BABYLON.StandardMaterial("bubbleMat_" + id, scene);
+    bubbleMat.diffuseTexture = bubbleTex;
+    bubbleMat.emissiveColor = new BABYLON.Color3(1,1,1);
+    bubbleTex.hasAlpha = true;
+    bubblePlane.material = bubbleMat;
+    root.showChat = (text) => {
+        bubblePlane.isVisible = true;
+        const ctx = bubbleTex.getContext();
+        ctx.clearRect(0,0,512,256);
+        ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(10,10,492,236);
+        ctx.font = "40px monospace"; ctx.fillStyle = "black"; ctx.textAlign = "center";
+        ctx.fillText(text.substring(0, 20), 256, 130);
+        bubbleTex.update();
+        setTimeout(() => { bubblePlane.isVisible = false; }, 4000);
+    };
+
+    return root;
+}
+
+// Controls
+window.addEventListener("keydown", (e) => {
+    if(document.activeElement === document.getElementById("chat-input")) return;
+    if(e.key === "w" || e.key === "ArrowUp") inputs.up = true;
+    if(e.key === "s" || e.key === "ArrowDown") inputs.down = true;
+    if(e.key === "a" || e.key === "ArrowLeft") inputs.left = true;
+    if(e.key === "d" || e.key === "ArrowRight") inputs.right = true;
+    if(e.code === "Space") inputs.jump = true;
+});
+window.addEventListener("keyup", (e) => {
+    if(e.key === "w" || e.key === "ArrowUp") inputs.up = false;
+    if(e.key === "s" || e.key === "ArrowDown") inputs.down = false;
+    if(e.key === "a" || e.key === "ArrowLeft") inputs.left = false;
+    if(e.key === "d" || e.key === "ArrowRight") inputs.right = false;
+    if(e.code === "Space") inputs.jump = false;
+});
+if (isMobile) {
+    document.querySelectorAll(".touch-controls").forEach(el => el.style.display = "block");
+    const bindTouch = (id, key) => {
+        const btn = document.getElementById(id);
+        btn.addEventListener("touchstart", (e) => { e.preventDefault(); inputs[key] = true; });
+        btn.addEventListener("touchend", (e) => { e.preventDefault(); inputs[key] = false; });
+    };
+    bindTouch("btn-up", "up"); bindTouch("btn-down", "down");
+    bindTouch("btn-left", "left"); bindTouch("btn-right", "right");
+    bindTouch("btn-jump", "jump");
+}
+
+let velocity = new BABYLON.Vector3(0, 0, 0);
+const SPEED = 0.4;
+const GRAVITY = -0.025;
+const JUMP_FORCE = 0.5;
+
+// Main Loop
+scene.registerBeforeRender(() => {
+    // --- ANIMATION UPDATE LOOP (For all players) ---
+    // We update animations locally for everyone to keep it smooth
+    // The "isMoving" flag is inferred from position changes in network, but for local player we know inputs.
+    
+    // --- LOCAL PLAYER LOGIC ---
+    if (!myPlayerMesh || !ground.isReady()) return;
+
+    // Movement
+    camera.target = myPlayerMesh.position.add(new BABYLON.Vector3(0, 1.5, 0));
+
+    let moveDir = BABYLON.Vector3.Zero();
+    let forward = camera.getDirection(BABYLON.Axis.Z);
+    forward.y = 0; forward.normalize();
+    let right = camera.getDirection(BABYLON.Axis.X);
+    right.y = 0; right.normalize();
+
+    if (inputs.up) moveDir.addInPlace(forward);
+    if (inputs.down) moveDir.subtractInPlace(forward);
+    if (inputs.right) moveDir.addInPlace(right);
+    if (inputs.left) moveDir.subtractInPlace(right);
+
+    const isMoving = moveDir.length() > 0;
+
+    if (isMoving) {
+        moveDir.normalize();
+        velocity.x = moveDir.x * SPEED;
+        velocity.z = moveDir.z * SPEED;
+        myPlayerMesh.lookAt(myPlayerMesh.position.add(moveDir));
+    } else {
+        velocity.x = 0; velocity.z = 0; 
+    }
+
+    // Physics
+    let groundHeight = ground.getHeightAtCoordinates(myPlayerMesh.position.x, myPlayerMesh.position.z);
+    let isGrounded = (myPlayerMesh.position.y - 0.75 <= groundHeight + 0.5);
+
+    if (isGrounded) {
+        if (velocity.y <= 0) {
+            myPlayerMesh.position.y = groundHeight + 0.75; 
+            velocity.y = 0;
+            if(!inputs.jump) myPlayerMesh.drawFace("happy");
+        }
+        if (inputs.jump) {
+            velocity.y = JUMP_FORCE;
+            myPlayerMesh.drawFace("jump");
+            myPlayerMesh.position.y += 0.2;
+            isGrounded = false;
+        }
+    } else {
+        velocity.y += GRAVITY;
+    }
+
+    // Collision
+    let nextX = myPlayerMesh.position.x + velocity.x;
+    let nextZ = myPlayerMesh.position.z + velocity.z;
+    let hitTree = false;
+    for (let t of treeColliders) {
+        let dx = nextX - t.x; let dz = nextZ - t.z;
+        if (dx*dx + dz*dz < 4) { hitTree = true; break; }
+    }
+    if (!hitTree) {
+        myPlayerMesh.position.x = nextX;
+        myPlayerMesh.position.z = nextZ;
+    }
+    myPlayerMesh.position.y += velocity.y;
+    if (myPlayerMesh.position.y < -10) { myPlayerMesh.position.y = 50; velocity = BABYLON.Vector3.Zero(); }
+
+    // --- ANIMATION PROCEDURAL ---
+    const body = myPlayerMesh.bodyMesh;
+    
+    // 1. Walk Animation (Waddle)
+    if (isGrounded && isMoving) {
+        myPlayerMesh.animState.walkTime += 0.3; // Speed of waddle
+        // Tilt Z
+        body.rotation.z = Math.sin(myPlayerMesh.animState.walkTime) * 0.1;
+        // Bob Y
+        body.position.y = Math.abs(Math.sin(myPlayerMesh.animState.walkTime)) * 0.2;
+    } else if (isGrounded && !isMoving) {
+        // Idle
+        body.rotation.z *= 0.8; // Return to 0
+        body.position.y *= 0.8; 
+    }
+
+    // 2. Jump Animation (Flip)
+    if (!isGrounded) {
+        body.rotation.x += 0.15; // Spin forward
+    } else {
+        // Snap back to upright when landed
+        // Simplest way: just zero it out smoothly
+        if (body.rotation.x > 0.1 || body.rotation.x < -0.1) {
+             // Find nearest multiple of 2PI to snap to, but for simplicity reset:
+             body.rotation.x = 0;
+        }
+    }
+
+    // Broadcast
+    if (peer && peer.open) {
+        broadcastData({
+            type: "move", id: myID, 
+            pos: myPlayerMesh.position,
+            rot: myPlayerMesh.rotationQuaternion || myPlayerMesh.rotation,
+            // Send simple state for others to animate
+            anim: { moving: isMoving, grounded: isGrounded }
+        });
+    }
+});
+
+// --- 4. NETWORK ---
+function initPeer(id) {
+    myID = id;
+    myColor.top = document.getElementById("col-start").value;
+    myColor.bot = document.getElementById("col-end").value;
+    
+    document.getElementById("connection-panel").style.display = "none";
+    addSystemMessage("Welcome, " + id);
+    
+    myPlayerMesh = createPlayerMesh(id, null, myColor);
+    
+    peer = new Peer(id);
+    peer.on('open', (id) => addSystemMessage("Connected to Server."));
+    peer.on('connection', (c) => {
+        if(isHost) { connections.push(c); setupConnectionEvent(c); addSystemMessage("Player joined!"); }
+    });
+}
+
+function startHost() {
+    isHost = true;
+    let id = document.getElementById("my-id").value || "Host" + Math.floor(Math.random()*100);
+    initPeer(id);
+}
+
+function joinGame() {
+    isHost = false;
+    let myName = document.getElementById("my-id").value || "Guest" + Math.floor(Math.random()*100);
+    let hostID = document.getElementById("host-id").value;
+    if(!hostID) return alert("Enter Host ID");
+    initPeer(myName);
+    conn = peer.connect(hostID);
+    conn.on('open', () => { 
+        setupConnectionEvent(conn); 
+        // Send join packet with my color
+        conn.send({ type: "join", id: myName, color: myColor }); 
+    });
+}
+
+function setupConnectionEvent(c) { c.on('data', (data) => handleData(data, c)); }
+
+function handleData(data, senderConn) {
+    if (data.type === "join") {
+        addSystemMessage(data.id + " joined.");
+        // If I am host, tell everyone about this new player (including their color)
+        if (isHost) {
+            // Register player
+            if(!players[data.id]) {
+                players[data.id] = createPlayerMesh(data.id, new BABYLON.Vector3(0,50,0), data.color);
+            }
+            // Relay to others
+            relayData(data, senderConn);
+            
+            // Send back my own data (and list of others) so they can see me
+            senderConn.send({ type: "join", id: myID, color: myColor });
+            // TODO: In a robust app, we'd send the whole player list here.
+        }
+        else {
+            // I am a guest, I received a join packet about someone else (or the host)
+            if(!players[data.id] && data.id !== myID) {
+                players[data.id] = createPlayerMesh(data.id, new BABYLON.Vector3(0,50,0), data.color);
+            }
+        }
+    }
+
+    if (data.type === "move") {
+        if (data.id === myID) return;
+        
+        let p = players[data.id];
+        // If we don't know this player yet (rare desync), create default
+        if (!p) {
+            players[data.id] = createPlayerMesh(data.id, new BABYLON.Vector3(data.pos.x, data.pos.y, data.pos.z));
+            p = players[data.id];
+        }
+
+        // Sync Position & Rotation
+        p.position = new BABYLON.Vector3(data.pos.x, data.pos.y, data.pos.z);
+        if (data.rot) p.rotation = new BABYLON.Vector3(data.rot.x, data.rot.y, data.rot.z);
+
+        // --- REMOTE ANIMATION ---
+        // We use the state sent to animate the mesh locally
+        const body = p.bodyMesh;
+        if(data.anim) {
+             if (data.anim.grounded && data.anim.moving) {
+                p.animState.walkTime += 0.3;
+                body.rotation.z = Math.sin(p.animState.walkTime) * 0.1;
+                body.position.y = Math.abs(Math.sin(p.animState.walkTime)) * 0.2;
+            } else if (data.anim.grounded) {
+                 body.rotation.z *= 0.8; body.position.y *= 0.8;
+            } else {
+                 body.rotation.x += 0.15; // Flip
+            }
+        }
+
+        if (isHost) relayData(data, senderConn);
+    }
+    
+    if (data.type === "chat") {
+        addChatMessage(data.id, data.msg);
+        if (players[data.id]) players[data.id].showChat(data.msg);
+        if (isHost) relayData(data, senderConn);
+    }
+}
+
+function relayData(data, excludeConn) { connections.forEach(c => { if (c !== excludeConn && c.open) c.send(data); }); }
+function broadcastData(data) {
+    if (isHost) connections.forEach(c => { if(c.open) c.send(data); });
+    else if (conn && conn.open) conn.send(data);
+}
+
+// Chat
+const chatInput = document.getElementById("chat-input");
+const chatHistory = document.getElementById("chat-history");
+chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && chatInput.value !== "") {
+        let msg = chatInput.value;
+        addChatMessage(myID, msg);
+        if(myPlayerMesh) myPlayerMesh.showChat(msg);
+        broadcastData({ type: "chat", id: myID, msg: msg });
+        chatInput.value = "";
+    }
+});
+function addChatMessage(id, msg) {
+    const div = document.createElement("div"); div.innerText = `${id}: ${msg}`;
+    chatHistory.appendChild(div); chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+function addSystemMessage(msg) {
+    const div = document.createElement("div"); div.innerText = `> ${msg}`; div.style.color = "#00d2ff";
+    chatHistory.appendChild(div);
+}
+
+// Start Render
+engine.runRenderLoop(() => { scene.render(); });
+window.addEventListener("resize", () => { engine.resize(); });
+</script>
+</body>
+</html>
