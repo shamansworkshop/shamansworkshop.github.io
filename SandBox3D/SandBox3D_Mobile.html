@@ -133,6 +133,48 @@
             background: transparent; border: 1px solid #555;
         }
 
+        /* --- FLASHBANG OVERLAY --- */
+        #flash-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999; /* Above everything */
+            pointer-events: none; /* Let clicks pass through */
+            opacity: 0;
+            /* Changed from Flex to Block so the image can stretch freely */
+            display: block; 
+        }
+        
+        #flash-meme-img {
+            /* FORCE FULL SCREEN */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            
+            /* 'fill' stretches the image to hit every corner (might distort). 
+               Change to 'cover' if you want to keep aspect ratio but crop edges. */
+            object-fit: fill; 
+            
+            display: none; /* Hidden during the "White" flash phase */
+        }
+
+        /* Flashbang Button Color */
+        button#btn-flashbang { border-left: 4px solid #f1c40f; }
+        button#btn-flashbang.active { background: #635a2d; border-color: #f1c40f; }
+        
+        /* Icon for Flashbang */
+        .icon-flash { 
+            background: #f1c40f; 
+            width: 8px; height: 14px; 
+            border-radius: 2px; 
+            border: 1px solid #fff;
+        }
+
         button#btn-enter-game { background: #27ae60; border-color: #2ecc71; justify-content: center; font-weight: bold; margin-bottom: 5px; }
         
         /* Upload Button */
@@ -216,6 +258,10 @@
 <body>
 
     <input type="file" id="file-input" accept=".glb,.gltf,.obj" style="display: none;" onchange="handleFileUpload(this)">
+
+    <div id="flash-layer">
+        <img id="flash-meme-img" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExb2w3dmxjaDVxaXY1NWdoZ3ppd3EzcTU5enRnMTFhdHcxbXd2NHllayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ze4Y13PeotDfqoQWza/giphy.gif" alt="get flashbanged lol">
+    </div>
 
     <div id="left-panel" class="ui-panel-base minimized">
         <div class="panel-header">
@@ -324,6 +370,9 @@
                 </button>
                 <button id="btn-frag" class="btn-explosive" onclick="selectShape('frag_bomb')">
                     <span class="shape-icon icon-frag"></span> Cluster Bomb
+                </button>
+                <button id="btn-flashbang" onclick="selectShape('flashbang')">
+                    <span class="shape-icon icon-flash"></span> Flashbang
                 </button>
             </div>
 
@@ -531,6 +580,7 @@
             if (shape === 'cylinder') btnId = 'btn-cyl';
             if (shape === 'triangle') btnId = 'btn-tri';
             if (shape === 'frag_bomb') btnId = 'btn-frag';
+            if (shape === 'flashbang') btnId = 'btn-flashbang';
             // btn-custom matches automatically via 'btn-' + shape
             
             const activeBtn = document.getElementById(btnId);
@@ -877,6 +927,15 @@
                             mat.emissiveColor = new BABYLON.Color3(0.1, 0, 0); 
                             if (type === 'frag_bomb') mat.emissiveColor = new BABYLON.Color3(0.3, 0.1, 0); 
                         }
+                        // --- NEW FLASHBANG MESH ---
+                        else if (type === 'flashbang') {
+                            // Flashbangs look like canisters (Cylinders)
+                            mesh = BABYLON.MeshBuilder.CreateCylinder("flashbang", { height: scale * 1.5, diameter: scale * 0.5 }, scene);
+                            mesh.position.copyFrom(spawnPos);
+                            // Flashbang color (Yellow/White tip)
+                            mat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+                            mat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0);
+                        }
 
                         if (mesh) {
                             // Only apply color material to non-custom shapes
@@ -894,6 +953,10 @@
                             } else if (type === 'cylinder' || type === 'triangle') {
                                 mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: massVal, restitution: 0.1, friction: 0.8 }, scene);
                             }
+                            else if (type === 'flashbang') {
+                                mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: massVal, restitution: 0.3, friction: 0.5 }, scene);
+                                this.armBomb(mesh, scene, false, true); // Pass 'true' for isFlash
+                            }
 
                             if (type.includes('bomb')) this.armBomb(mesh, scene, type === 'frag_bomb');
                             
@@ -907,23 +970,31 @@
                         }
                     },
 
-                    armBomb: function(bombMesh, scene, isFragment) {
+                    armBomb: function (bombMesh, scene, isFragment, isFlash = false) {
                         let flashCount = 0;
                         const flashInterval = setInterval(() => {
-                            if(!bombMesh || bombMesh.isDisposed()) { clearInterval(flashInterval); return; }
-                            const colorOn = isFragment ? new BABYLON.Color3(1, 0.5, 0) : new BABYLON.Color3(1, 0, 0);
+                            if (!bombMesh || bombMesh.isDisposed()) { clearInterval(flashInterval); return; }
+
+                            // Visual countdown colors
+                            let colorOn = new BABYLON.Color3(1, 0, 0); // Default Red
+                            if (isFragment) colorOn = new BABYLON.Color3(1, 0.5, 0); // Orange
+                            if (isFlash) colorOn = new BABYLON.Color3(1, 1, 1); // White for Flashbang
+
                             if (flashCount % 2 === 0) bombMesh.material.emissiveColor = colorOn;
-                            else bombMesh.material.emissiveColor = new BABYLON.Color3(0.1, 0, 0);
+                            else bombMesh.material.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.1);
                             flashCount++;
-                        }, 500);
+                        }, isFlash ? 200 : 500); // Flashbangs beep faster
 
                         setTimeout(() => {
                             clearInterval(flashInterval);
-                            if(bombMesh && !bombMesh.isDisposed()) {
-                                this.explode(bombMesh.position, scene, isFragment, bombMesh.scaling.x);
+                            if (bombMesh && !bombMesh.isDisposed()) {
+                                // Trigger explosion or flash
+                                if (isFlash) this.triggerFlashbang(bombMesh.position, scene);
+                                else this.explode(bombMesh.position, scene, isFragment, bombMesh.scaling.x);
+
                                 bombMesh.dispose();
                             }
-                        }, 4000);
+                        }, isFlash ? 2500 : 4000); // Flashbangs explode sooner (2.5s)
                     },
 
                     explode: function(center, scene, isFragment, scaleMultiplier) {
@@ -964,6 +1035,38 @@
                         });
 
                         if (isFragment) this.spawnFragments(center, scene);
+                    },
+
+                    triggerFlashbang: function (center, scene) {
+                        // 1. Physical Knockback (Small pop)
+                        this.explode(center, scene, false, 0.2);
+
+                        // 2. THE SCREEN TAKEOVER
+                        const layer = document.getElementById('flash-layer');
+                        const meme = document.getElementById('flash-meme-img');
+
+                        // PHASE 1: PURE WHITE FLASH
+                        layer.style.transition = 'none';
+                        layer.style.backgroundColor = 'white';
+                        layer.style.opacity = '1';
+                        meme.style.display = 'none';
+
+                        // PHASE 2: THE IMAGE (After 150ms)
+                        setTimeout(() => {
+                            layer.style.backgroundColor = 'black'; // Dark background for the image
+                            meme.style.display = 'block';
+                        }, 150);
+
+                        // PHASE 3: FADE OUT (After 2.5 seconds)
+                        setTimeout(() => {
+                            layer.style.transition = 'opacity 2s ease-out';
+                            layer.style.opacity = '0';
+                        }, 2500);
+
+                        // Cleanup after fade to keep DOM clean
+                        setTimeout(() => {
+                            meme.style.display = 'none';
+                        }, 4500);
                     },
 
                     spawnFragments: function(center, scene) {
