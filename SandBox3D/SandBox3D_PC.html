@@ -160,7 +160,7 @@
             display: block; 
         }
         
-        #flash-meme-img {
+        #flash-meme-vid {
             /* FORCE FULL SCREEN */
             position: absolute;
             top: 0;
@@ -259,9 +259,9 @@
     <input type="file" id="file-input" accept=".glb,.gltf,.obj" style="display: none;" onchange="handleFileUpload(this)">
     
     <div id="flash-layer">
-        <img id="flash-meme-img"
-            src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExb2w3dmxjaDVxaXY1NWdoZ3ppd3EzcTU5enRnMTFhdHcxbXd2NHllayZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ze4Y13PeotDfqoQWza/giphy.gif"
-            alt="get flashbanged lol">
+        <video id="flash-meme-vid" muted playsinline style="width:100%; height:100%; object-fit:fill; display:none;">
+            <source src="./asset/gahdayum.mp4" type="video/mp4">
+        </video>
     </div>
 
     <div id="crosshair"></div>
@@ -1057,23 +1057,26 @@
                     },
 
                     triggerFlashbang: function (center, scene) {
-                        // 1. Physical Knockback (Small pop)
                         this.explode(center, scene, false, 0.2);
 
-                        // 2. THE SCREEN TAKEOVER
                         const layer = document.getElementById('flash-layer');
-                        const meme = document.getElementById('flash-meme-img');
+                        const video = document.getElementById('flash-meme-vid');
+                        if (!layer || !video) return;
 
-                        // PHASE 1: PURE WHITE FLASH
+                        // PHASE 1: WHITE FLASH
                         layer.style.transition = 'none';
                         layer.style.backgroundColor = 'white';
                         layer.style.opacity = '1';
-                        meme.style.display = 'none';
+                        video.style.display = 'none';
 
-                        // PHASE 2: THE IMAGE (After 150ms)
+                        // PHASE 2: VIDEO START (After 150ms)
                         setTimeout(() => {
-                            layer.style.backgroundColor = 'black'; // Dark background for the image
-                            meme.style.display = 'block';
+                            video.currentTime = 0; // Reset to start
+                            video.style.display = 'block';
+                            layer.style.backgroundColor = 'black';
+
+                            // Play the video and handle the promise (prevents console errors)
+                            video.play().catch(e => console.log("Video play blocked:", e));
                         }, 150);
 
                         // PHASE 3: FADE OUT (After 2.5 seconds)
@@ -1082,9 +1085,10 @@
                             layer.style.opacity = '0';
                         }, 2500);
 
-                        // Cleanup after fade to keep DOM clean
+                        // Cleanup: Pause and hide
                         setTimeout(() => {
-                            meme.style.display = 'none';
+                            video.pause();
+                            video.style.display = 'none';
                         }, 4500);
                     },
 
