@@ -277,6 +277,25 @@
                 <span class="shape-icon icon-play"></span> FULLSCREEN
             </button>
 
+            <button id="btn-graphics-toggle" onclick="toggleGraphicsUI()"
+                style="border-left: 4px solid #4aa3df; margin-bottom: 10px;">
+                <span class="shape-icon"
+                    style="background: transparent; border: 2px solid #4aa3df; border-radius: 2px; width: 10px; height: 10px;"></span>
+                GRAPHICS SETTINGS
+            </button>
+            
+            <div id="graphics-sub-panel"
+                style="display: none; background: rgba(20, 20, 20, 0.5); padding: 10px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #444;">
+                <div class="slider-group">
+                    <div class="slider-label"><span>Resolution Scale</span><span id="val-res">100%</span></div>
+                    <input type="range" id="opt-res" min="25" max="100" value="100" step="25" oninput="updateGraphics()">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label"><span>View Distance</span><span id="val-view">200m</span></div>
+                    <input type="range" id="opt-view" min="50" max="1000" value="500" step="50" oninput="updateGraphics()">
+                </div>
+            </div>
+
             <button id="btn-upload" onclick="triggerUpload()">
                 <span class="shape-icon icon-upload"></span> Upload 3D Model
             </button>
@@ -520,6 +539,35 @@
                 rightBtn.innerText = "O";
             }
         }
+
+        function toggleGraphicsUI() {
+                const subPanel = document.getElementById('graphics-sub-panel');
+                const btn = document.getElementById('btn-graphics-toggle');
+                const isHidden = subPanel.style.display === 'none';
+
+                subPanel.style.display = isHidden ? 'block' : 'none';
+                btn.classList.toggle('active', isHidden);
+            }
+
+            function updateGraphics() {
+                // 1. Get Values from UI
+                const resScale = document.getElementById('opt-res').value;
+                const viewDist = document.getElementById('opt-view').value;
+
+                // 2. Update UI Labels
+                document.getElementById('val-res').innerText = resScale + "%";
+                document.getElementById('val-view').innerText = viewDist + "m";
+
+                // 3. Apply to Engine (Shaman Logic)
+                const sb3d = workshop.shaman.sandbox3d;
+                if (sb3d.engine && sb3d.cameraFree) {
+                    // Apply Resolution Scaling
+                    sb3d.engine.setHardwareScalingLevel(1 / (resScale / 100));
+
+                    // Apply View Distance (Far Clip Plane)
+                    sb3d.cameraFree.maxZ = parseFloat(viewDist);
+                }
+            }
 
         function toggleRightUI() {
             const left = document.getElementById('left-panel');
