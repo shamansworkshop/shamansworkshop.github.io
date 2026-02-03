@@ -1124,14 +1124,18 @@
                         }, isFlash ? 2500 : 4000);
                     },
 
-                    explode: function(center, scene, isFragment, scaleMultiplier) {
-                        const snd = document.getElementById('explosion-snd');
-                        if (snd) {
-                            snd.currentTime = 0; // Restart if already playing
-                            snd.volume = 1.0;    // Adjust master volume here
-                            snd.play().catch(e => console.log("Audio blocked: Interaction required."));
+                    explode: function (center, scene, isFragment, scaleMultiplier, playSound = true) {
+                        // Only play sound if playSound is true (default)
+                        if (playSound) {
+                            const snd = document.getElementById('explosion-snd');
+                            if (snd) {
+                                snd.currentTime = 0;
+                                snd.volume = 1.0;
+                                snd.play().catch(e => console.log("Audio blocked: Interaction required."));
+                            }
                         }
-                        const explosion = BABYLON.MeshBuilder.CreateSphere("explosion", {diameter: 1 * scaleMultiplier}, scene);
+
+                        const explosion = BABYLON.MeshBuilder.CreateSphere("explosion", { diameter: 1 * scaleMultiplier }, scene);
                         explosion.position = center;
                         const expMat = new BABYLON.StandardMaterial("expMat", scene);
                         expMat.diffuseColor = isFragment ? new BABYLON.Color3(1, 0.8, 0) : new BABYLON.Color3(1, 0.5, 0);
@@ -1151,7 +1155,7 @@
                         });
 
                         const blastRadius = 25 * scaleMultiplier;
-                        const blastForce = 60 * scaleMultiplier; 
+                        const blastForce = 60 * scaleMultiplier;
                         spawnedMeshes.forEach(mesh => {
                             if (mesh && !mesh.isDisposed() && mesh.physicsImpostor) {
                                 if (mesh.metadata && mesh.metadata.originalMass) return;
@@ -1171,8 +1175,8 @@
                     },
 
                     triggerFlashbang: function (center, scene) {
-                        // Keep the small physical explosion for physics impact
-                        this.explode(center, scene, false, 0.2);
+                        // Keep the small physical explosion for physics impact, BUT SILENCE THE BOMBOCLAT (playSound = false)
+                        this.explode(center, scene, false, 0.2, false);
 
                         const layer = document.getElementById('flash-layer');
                         const video = document.getElementById('flash-meme-vid');
@@ -1180,7 +1184,7 @@
 
                         // Reset layer and prepare video immediately
                         layer.style.transition = 'none';
-                        layer.style.backgroundColor = 'transparent'; // No white flash
+                        layer.style.backgroundColor = 'transparent';
                         layer.style.opacity = '1';
 
                         video.currentTime = 0;
@@ -1188,7 +1192,7 @@
                         video.volume = 1.0;
                         video.style.display = 'block';
 
-                        // Immediate Playback
+                        // Immediate Playback of Gahdayum
                         video.play().catch(e => {
                             console.error("Audio/Video blocked! Ensure pointer is locked or screen clicked.", e);
                         });
@@ -1197,30 +1201,34 @@
                         setTimeout(() => {
                             layer.style.transition = 'opacity 1.5s ease-out';
                             layer.style.opacity = '0';
-                        }, 2500); // Adjust based on the length of gahdayum.mp4
+                        }, 2500);
 
                         // Complete cleanup
                         setTimeout(() => {
                             video.pause();
                             video.style.display = 'none';
-                            layer.style.backgroundColor = 'white'; // Reset background for future use if needed
+                            layer.style.backgroundColor = 'white';
                         }, 4500);
                     },
 
-                    spawnFragments: function(center, scene) {
+                    spawnFragments: function (center, scene) {
                         const numFrags = 20;
-                        for(let i=0; i<numFrags; i++) {
-                            const frag = BABYLON.MeshBuilder.CreateBox("frag", {size: 0.5}, scene);
+                        for (let i = 0; i < numFrags; i++) {
+                            const frag = BABYLON.MeshBuilder.CreateBox("frag", { size: 0.5 }, scene);
                             frag.position = center.clone();
                             frag.position.y += (Math.random() - 0.5) * 0.2;
                             frag.position.x += (Math.random() - 0.5) * 0.1;
                             frag.position.z += (Math.random() - 0.5) * 0.1;
                             const fMat = new BABYLON.StandardMaterial("fMat", scene);
                             fMat.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-                            fMat.emissiveColor = new BABYLON.Color3(0.8, 0.3, 0); 
+                            fMat.emissiveColor = new BABYLON.Color3(0.8, 0.3, 0);
                             frag.material = fMat;
                             frag.physicsImpostor = new BABYLON.PhysicsImpostor(frag, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0.5, restitution: 0.1 }, scene);
-                            const exDir = new BABYLON.Vector3(Math.random()-0.5, Math.random(), Math.random()-0.5).normalize();
+                            const exDir = new BABYLON.Vector3(
+                                Math.random() - 0.5,
+                                Math.random() - 0.5, // Allow negative Y for a spherical blast
+                                Math.random() - 0.5
+                            ).normalize();
                             frag.physicsImpostor.applyImpulse(exDir.scale(12), frag.getAbsolutePosition());
                             spawnedMeshes.push(frag);
                         }
