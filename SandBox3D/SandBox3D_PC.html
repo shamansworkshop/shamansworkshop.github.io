@@ -563,10 +563,10 @@
                     const scene = workshop.shaman.sandbox3d.scene;
 
                     // --- ERROR FIX START ---
-                    // "getAudioEngine()" is not a function. It is a property "audioEngine".
+                    // We access the audio engine via the scene's engine instance safely
                     const engine = scene.getEngine();
-                    if (engine.audioEngine) {
-                        engine.audioEngine.unlock();
+                    if (engine.getAudioEngine()) {
+                        engine.getAudioEngine().unlock();
                     }
                     // --- ERROR FIX END ---
 
@@ -614,69 +614,72 @@
             }
 
         function handleFileUpload(input) {
-            if (input.files && input.files[0]) {
+            // Capture the mesh immediately to avoid issues if the global variable changes during load
+            const targetMesh = pendingJukeboxMesh;
+
+            if (input.files && input.files[0] && targetMesh) {
+                const scene = workshop.shaman.sandbox3d.scene;
+                const engine = scene.getEngine();
+
+                // 1. Unlock Audio Engine (User Gesture requirement)
+                if (engine.audioEngine) {
+                    engine.audioEngine.unlock();
+                }
+
                 const file = input.files[0];
                 const blobUrl = URL.createObjectURL(file);
-                const ext = file.name.split('.').pop().toLowerCase();
-                
-                if(sceneRef) {
-                    document.getElementById('custom-name').innerText = file.name.length > 15 ? file.name.substring(0,12) + "..." : file.name;
 
-                    BABYLON.SceneLoader.ImportMesh("", "", blobUrl, sceneRef, 
-                        function (meshes, particleSystems, skeletons) {
-                            if(meshes.length === 0) return;
-
-                            let min = new BABYLON.Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-                            let max = new BABYLON.Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
-
-                            meshes.forEach(m => {
-                                m.setParent(null); 
-                                const b = m.getHierarchyBoundingVectors();
-                                min = BABYLON.Vector3.Minimize(min, b.min);
-                                max = BABYLON.Vector3.Maximize(max, b.max);
-                            });
-
-                            const width = max.x - min.x;
-                            const height = max.y - min.y;
-                            const depth = max.z - min.z;
-                            const center = min.add(max).scale(0.5);
-
-                            const hitBox = BABYLON.MeshBuilder.CreateBox("customHitbox", {width: width, height: height, depth: depth}, sceneRef);
-                            hitBox.isVisible = false; 
-                            
-                            meshes.forEach(m => {
-                                m.parent = hitBox;
-                                m.position = m.position.subtract(center);
-                            });
-
-                            hitBox.setEnabled(false);
-                            
-                            if (customModelTemplate && customModelTemplate.mesh) {
-                                customModelTemplate.mesh.dispose();
-                            }
-
-                            customModelTemplate = {
-                                mesh: hitBox,
-                                dimensions: { width, height, depth }
-                            };
-
-                            document.getElementById('custom-model-container').style.display = 'block';
-                            selectShape('custom');
-                            
-                            // Open objects panel if hidden
-                            const right = document.getElementById('right-panel');
-                            if(right.classList.contains('minimized')) toggleRightUI();
-
-                            input.value = "";
-                        }, 
-                        null, 
-                        function (scene, message, exception) {
-                            console.error("Error loading file:", message);
-                            alert("Failed to load model.");
-                        },
-                        "." + ext
-                    );
+                // 2. Clean up existing sound on this specific mesh
+                if (targetMesh.metadata && targetMesh.metadata.sound) {
+                    targetMesh.metadata.sound.stop();
+                    targetMesh.metadata.sound.dispose();
                 }
+
+                // 3. Create the Sound
+                // CHANGED: streaming is now FALSE to ensure 3D Spatial Audio works
+                const music = new BABYLON.Sound("JukeboxMusic", blobUrl, scene, function () {
+
+                    // Check if mesh was deleted while audio was loading
+                    if (targetMesh.isDisposed()) {
+                        music.dispose();
+                        return;
+                    }
+
+                    music.loop = true;
+                    music.spatialSound = true;
+
+                    // Adjust these to make it louder/hearable from further away
+                    music.maxDistance = 200;
+                    music.rolloffFactor = 1.0;
+                    music.setVolume(1.0);
+
+                    music.attachToMesh(targetMesh);
+                    music.play();
+
+                    // Store metadata
+                    if (!targetMesh.metadata) targetMesh.metadata = {};
+                    targetMesh.metadata.isJukebox = true;
+                    targetMesh.metadata.sound = music;
+
+                    // Track globally
+                    activeJukeboxSounds.push(music);
+
+                    // Visual Feedback (Flash Purple)
+                    if (targetMesh.material) {
+                        targetMesh.material.emissiveColor = new BABYLON.Color3(0.8, 0.2, 1);
+                        setTimeout(() => {
+                            if (targetMesh && !targetMesh.isDisposed()) {
+                                targetMesh.material.emissiveColor = new BABYLON.Color3(0.2, 0, 0.3);
+                            }
+                        }, 500);
+                    }
+
+                    // Clear the global pending flag
+                    pendingJukeboxMesh = null;
+                }, {
+                    autoplay: false,
+                    streaming: false // <--- THIS WAS THE MAIN CAUSE OF SILENCE
+                });
             }
         }
 
@@ -692,8 +695,6 @@
                     } else if (action === 'clear') {
                         sound.stop();
                         sound.dispose();
-                        // Also clear the metadata ref if possible, 
-                        // though strictly not required if sound is disposed
                     }
                 });
 
