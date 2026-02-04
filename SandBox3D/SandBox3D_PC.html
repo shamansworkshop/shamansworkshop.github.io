@@ -187,6 +187,21 @@
             border: 1px solid #fff;
         }
 
+        /* Jukebox Icon */
+        .icon-music { 
+            background: transparent; 
+            width: 12px; height: 12px; 
+            border-left: 2px solid #ccc; 
+            border-right: 2px solid #ccc; 
+            border-bottom: 2px solid #ccc;
+            position: relative;
+        }
+
+        .icon-music::before {
+            content: ''; position: absolute; top: 2px; left: 0; 
+            width: 100%; height: 2px; background: #ccc;
+        }
+
         button#btn-enter-game { background: #27ae60; border-color: #2ecc71; justify-content: center; font-weight: bold; margin-bottom: 5px; }
         button#btn-upload { background: #333; border-color: #888; justify-content: center; font-weight: bold; margin-bottom: 10px; margin-top: 5px; }
         button#btn-upload:hover { background: #555; border-color: #aaa; }
@@ -202,6 +217,8 @@
         button#btn-build { border-left: 4px solid #e91e63; }
         button#btn-freeze.thaw-mode { border-left-color: #e67e22; }
         button#btn-freeze.thaw-mode.active { background: #a04000; border-color: #e67e22; }
+        button.btn-misc { border-left: 4px solid #9b59b6; }
+        button.btn-misc.active { background: #4a2c5a; border-color: #be7add; }
 
         /* Custom Model Button */
         button#btn-custom { border-left: 4px solid #f39c12; }
@@ -257,6 +274,8 @@
 <body>
 
     <input type="file" id="file-input" accept=".glb,.gltf,.obj" style="display: none;" onchange="handleFileUpload(this)">
+
+    <input type="file" id="audio-input" accept=".mp3,.wav,.ogg" style="display: none;" onchange="handleAudioUpload(this)">
     
     <div id="flash-layer">
         <video id="flash-meme-vid" playsinline preload="auto"
@@ -400,6 +419,13 @@
                 </button>
             </div>
 
+            <div class="section-label">Misc</div>
+            <div class="control-group">
+                <button id="btn-jukebox" class="btn-misc" onclick="selectShape('jukebox')">
+                    <span class="shape-icon icon-music"></span> Jukebox
+                </button>
+            </div>
+
             <div class="section-label">Explosives</div>
             <div class="control-group">
                 <button id="btn-bomb" class="btn-explosive" onclick="selectShape('bomb')">
@@ -431,7 +457,9 @@
         let sceneRef = null;
         let viewTargetMesh = null; 
         
-        let customModelTemplate = null; 
+        let customModelTemplate = null;
+        
+        let pendingJukeboxMesh = null;
 
         // Movement State
         const moveState = { up: false, down: false, left: false, right: false };
@@ -508,6 +536,56 @@
         function triggerUpload() {
             document.getElementById('file-input').click();
         }
+
+        function triggerAudioUpload(mesh) {
+                pendingJukeboxMesh = mesh;
+                // Reset value so we can upload the same song twice if needed
+                document.getElementById('audio-input').value = "";
+                document.getElementById('audio-input').click();
+            }
+
+            function handleAudioUpload(input) {
+                if (input.files && input.files[0] && pendingJukeboxMesh) {
+                    const file = input.files[0];
+                    const blobUrl = URL.createObjectURL(file);
+
+                    // Access the Shaman's scope to attach sound
+                    const scene = workshop.shaman.sandbox3d.scene;
+
+                    // Stop previous sound if one exists on this specific box
+                    if (pendingJukeboxMesh.metadata && pendingJukeboxMesh.metadata.sound) {
+                        pendingJukeboxMesh.metadata.sound.dispose();
+                    }
+
+                    // Create Spatial Sound
+                    const music = new BABYLON.Sound("JukeboxMusic", blobUrl, scene, null, {
+                        loop: true,
+                        autoplay: true,
+                        spatialSound: true,
+                        maxDistance: 100, // Music fades out at 100m
+                        rolloffFactor: 1.0 // Standard attenuation
+                    });
+
+                    // Attach logic
+                    music.attachToMesh(pendingJukeboxMesh);
+
+                    // Store in metadata so we can dispose it if we delete the box
+                    if (!pendingJukeboxMesh.metadata) pendingJukeboxMesh.metadata = {};
+                    pendingJukeboxMesh.metadata.isJukebox = true;
+                    pendingJukeboxMesh.metadata.sound = music;
+
+                    // Visual feedback: Flash the box purple
+                    const originalColor = pendingJukeboxMesh.material.emissiveColor;
+                    pendingJukeboxMesh.material.emissiveColor = new BABYLON.Color3(0.8, 0.2, 1);
+                    setTimeout(() => {
+                        if (pendingJukeboxMesh && !pendingJukeboxMesh.isDisposed()) {
+                            pendingJukeboxMesh.material.emissiveColor = new BABYLON.Color3(0, 0, 0);
+                        }
+                    }, 500);
+
+                    pendingJukeboxMesh = null; // Clear pending
+                }
+            }
 
         function handleFileUpload(input) {
             if (input.files && input.files[0]) {
@@ -673,6 +751,7 @@
             if (shape === 'triangle') btnId = 'btn-tri';
             if (shape === 'frag_bomb') btnId = 'btn-frag';
             if (shape === 'flashbang') btnId = 'btn-flashbang';
+            if (shape === 'jukebox') btnId = 'btn-jukebox';
             
             const activeBtn = document.getElementById(btnId);
             if(activeBtn) activeBtn.classList.add('active');
@@ -747,10 +826,23 @@
 
         function clearObjects() {
             if (!sceneRef) return;
-            if(selectedShape === 'view') toggleViewMode();
+            if (selectedShape === 'view') toggleViewMode();
+
             viewTargetMesh = null;
-            spawnedMeshes.forEach(mesh => { if(mesh && !mesh.isDisposed()) mesh.dispose(); });
-            spawnedMeshes = [];
+
+            // Corrected loop: We must check each mesh individually
+            spawnedMeshes.forEach(mesh => {
+                if (mesh && !mesh.isDisposed()) {
+                    // Check if this specific mesh is a Jukebox with active audio
+                    if (mesh.metadata && mesh.metadata.sound) {
+                        mesh.metadata.sound.stop();
+                        mesh.metadata.sound.dispose();
+                    }
+                    mesh.dispose();
+                }
+            });
+
+            spawnedMeshes = []; // Reset the list
         }
 
         // ==========================================
@@ -957,6 +1049,10 @@
 
                                     if (selectedShape === 'eraser') {
                                         if (mesh.name === "ground" || mesh.name === "ramp") return;
+                                        if (mesh.metadata && mesh.metadata.sound) {
+                                            mesh.metadata.sound.stop();
+                                            mesh.metadata.sound.dispose();
+                                        }
                                         mesh.dispose();
                                         const index = spawnedMeshes.indexOf(mesh);
                                         if (index > -1) spawnedMeshes.splice(index, 1);
@@ -975,6 +1071,11 @@
                                             const forceMagnitude = 50 * (mesh.scaling.x);
                                             mesh.physicsImpostor.applyImpulse(forceDirection.scale(forceMagnitude), pickInfo.pickedPoint);
                                         }
+                                        return;
+                                    }
+
+                                    if (mesh.metadata && mesh.metadata.isJukebox && selectedShape !== 'eraser' && selectedShape !== 'push') {
+                                        triggerAudioUpload(mesh);
                                         return;
                                     }
 
@@ -1057,7 +1158,6 @@
                             if (type === 'frag_bomb') mat.emissiveColor = new BABYLON.Color3(0.3, 0.1, 0); 
                         }
 
-                        // --- NEW FLASHBANG MESH ---
                         else if (type === 'flashbang') {
                             // Flashbangs look like canisters (Cylinders)
                             mesh = BABYLON.MeshBuilder.CreateCylinder("flashbang", { height: scale * 1.5, diameter: scale * 0.5 }, scene);
@@ -1065,6 +1165,19 @@
                             // Flashbang color (Yellow/White tip)
                             mat.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
                             mat.emissiveColor = new BABYLON.Color3(0.2, 0.2, 0);
+                        }
+
+                        else if (type === 'jukebox') {
+                            // A Jukebox is a Box with a distinct look
+                            mesh = BABYLON.MeshBuilder.CreateBox("jukebox", { size: scale }, scene);
+                            mesh.position.copyFrom(spawnPos);
+
+                            // Give it a "Speaker" look (dark with purple emissive hint)
+                            mat.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+                            mat.emissiveColor = new BABYLON.Color3(0.2, 0, 0.3);
+
+                            // Tag it immediately
+                            mesh.metadata = { isJukebox: true, sound: null };
                         }
 
                         if (mesh) {
@@ -1201,13 +1314,14 @@
                         setTimeout(() => {
                             layer.style.transition = 'opacity 1.5s ease-out';
                             layer.style.opacity = '0';
-                        }, 3700);
+                        }, 3500);
 
                         // Complete cleanup
                         setTimeout(() => {
                             video.pause();
                             video.style.display = 'none';
-                        }, 5250);
+                            layer.style.backgroundColor = 'white';
+                        }, 4500);
                     },
 
                     spawnFragments: function (center, scene) {
