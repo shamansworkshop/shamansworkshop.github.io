@@ -370,6 +370,14 @@
             </div>
             
             <div class="slider-group">
+                <div class="slider-label">
+                    <span>Mass</span>
+                    <span id="mass-display">1.5</span>
+                </div>
+                <input type="range" id="mass-slider" min="0.1" max="100.0" step="0.1" value="1.5" oninput="updateMass(this.value)">
+            </div>
+
+            <div class="slider-group">
                 <div class="slider-label"><span>Color</span></div>
                 <input type="color" id="color-picker" value="#3498db">
             </div>
@@ -442,6 +450,7 @@
         let freezeAction = 'freeze'; 
         let isBuildMode = false; 
         let currentSize = 1.0; 
+        let currentMass = 1.5;
         let spawnedMeshes = [];    
         let sceneRef = null;
         let viewTargetMesh = null; 
@@ -678,6 +687,23 @@
         function updateSize(val) {
             currentSize = parseFloat(val);
             document.getElementById('size-display').innerText = currentSize.toFixed(1);
+
+            // AUTO-CALCULATE MASS based on Size (using your standard 1.5 multiplier)
+            // This ensures big things get heavier automatically...
+            currentMass = (currentSize * 1.5);
+
+            // ...unless you manually change the mass slider afterwards.
+            const massSlider = document.getElementById('mass-slider');
+            const massDisplay = document.getElementById('mass-display');
+
+            massSlider.value = currentMass;
+            massDisplay.innerText = currentMass.toFixed(1);
+        }
+
+        function updateMass(val) {
+            // Manual override for Mass
+            currentMass = parseFloat(val);
+            document.getElementById('mass-display').innerText = currentMass.toFixed(1);        
         }
 
         function toggleFreezeLogic() {
@@ -1035,7 +1061,7 @@
                             // Only apply color material to non-custom shapes
                             if(type !== 'custom') mesh.material = mat;
                             
-                            const massVal = scale * 1.5; 
+                            const massVal = currentMass; 
 
                             if (type === 'custom' && customModelTemplate) {
                                 mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 5 * scale, restitution: 0.1, friction: 0.5 }, scene);
