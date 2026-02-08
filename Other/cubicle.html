@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cubicle | Shaman's Workshop</title>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/cannon.js"></script>
+
+<style>
+html,body{
+margin:0;padding:0;width:100%;height:100%;
+overflow:hidden;background:#050505;
+font-family:Courier New, monospace;
+}
+#renderCanvas{width:100%;height:100%;touch-action:none;outline:none;}
+#ui-layer{
+position:absolute;top:20px;left:20px;color:#aaffaa;
+text-shadow:0 0 5px #aaffaa;z-index:10;
+}
+</style>
+</head>
+
+<body>
+<canvas id="renderCanvas"></canvas>
+
+<div id="ui-layer">
+<h3>PROJECT: CUBICLE</h3>
+<p id="status">STATUS: OVERTIME</p>
+<p id="debug">Initializing...</p>
+</div>
+
+<script>
+const canvas = document.getElementById("renderCanvas");
+const statusText = document.getElementById("status");
+const debugText = document.getElementById("debug");
+
+let engine = new BABYLON.Engine(canvas,true);
+let scene = new BABYLON.Scene(engine);
+
+scene.enablePhysics(new BABYLON.Vector3(0,-15,0),new BABYLON.CannonJSPlugin());
+
+/* ================= ATMOSPHERE ================= */
+
+scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+scene.fogDensity = 0.07;
+scene.fogColor = new BABYLON.Color3(0.05,0.05,0.05);
+scene.clearColor = new BABYLON.Color3(0.02,0.02,0.02);
+
+/* ================= LIGHT ================= */
+
+const light = new BABYLON.HemisphericLight("light",new BABYLON.Vector3(0,1,0),scene);
+light.intensity = 0.25;
+
+/* ================= MATERIALS ================= */
+
+const floorMat = new BABYLON.StandardMaterial("f",scene);
+floorMat.diffuseColor = new BABYLON.Color3(0.2,0.2,0.25);
+
+const wallMat = new BABYLON.StandardMaterial("w",scene);
+wallMat.diffuseColor = new BABYLON.Color3(0.8,0.75,0.6);
+
+/* ================= GROUND ================= */
+
+const ground = BABYLON.MeshBuilder.CreateGround("g",{width:120,height:120},scene);
+ground.material = floorMat;
+ground.physicsImpostor = new BABYLON.PhysicsImpostor(
+ground,BABYLON.PhysicsImpostor.BoxImpostor,{mass:0},scene);
+
+/* ================= WALLS ================= */
+
+let walls=[];
+for(let i=0;i<45;i++){
+let x=(Math.random()*60)-30;
+let z=(Math.random()*60)-30;
+if(Math.abs(x)<6 && Math.abs(z)<6) continue;
+
+let w = BABYLON.MeshBuilder.CreateBox("wall",{width:0.2,height:3,depth:4},scene);
+w.position.set(x,1.5,z);
+w.rotation.y=Math.random()>0.5?Math.PI/2:0;
+w.material=wallMat;
+w.physicsImpostor=new BABYLON.PhysicsImpostor(
+w,BABYLON.PhysicsImpostor.BoxImpostor,{mass:0},scene);
+walls.push(w);
+}
+
+/* ================= PLAYER ================= */
+
+const player = BABYLON.MeshBuilder.CreateCapsule("p",{height:1.8,radius:0.5},scene);
+player.visibility=0;
+player.position.y=2;
+
+player.physicsImpostor=new BABYLON.PhysicsImpostor(
+player,BABYLON.PhysicsImpostor.CapsuleImpostor,
+{mass:80,friction:0,restitution:0},scene);
+
+const camera=new BABYLON.UniversalCamera("cam",new BABYLON.Vector3(0,0.8,0),scene);
+camera.parent=player;
+camera.attachControl(canvas,true);
+camera.fov=1.2;
+
+/* ================= HORROR ENTITY ================= */
+
+const entity = BABYLON.MeshBuilder.CreateSphere("e",{diameter:1.2},scene);
+entity.visibility=0; // invisible stalker
+entity.position.set(10,1,10);
+
+let entityDistance = 10;
+
+/* ================= INPUT ================= */
+
+let input={};
+window.addEventListener("keydown",e=>input[e.key.toLowerCase()]=true);
+window.addEventListener("keyup",e=>input[e.key.toLowerCase()]=false);
+
+/* ================= TERMINAL LIES ================= */
+
+const messages=[
+"STATUS: OVERTIME",
+"STATUS: YOU ARE NOT ALONE",
+"STATUS: RETURN TO DESK",
+"STATUS: CLOCK OUT FAILED",
+"STATUS: STAY STILL",
+"STATUS: IT IS BEHIND YOU"
+];
+
+setInterval(()=>{
+statusText.innerText = messages[Math.floor(Math.random()*messages.length)];
+},25000);
+
+/* ================= GAME LOOP ================= */
+
+scene.onBeforeRenderObservable.add(()=>{
+
+/* ---- PLAYER MOVE ---- */
+
+let dir = camera.getForwardRay().direction;
+dir.y=0; dir.normalize();
+
+let right = dir.cross(new BABYLON.Vector3(0,1,0));
+
+let move=BABYLON.Vector3.Zero();
+
+if(input["w"]) move.addInPlace(dir);
+if(input["s"]) move.subtractInPlace(dir);
+if(input["a"]) move.subtractInPlace(right);
+if(input["d"]) move.addInPlace(right);
+
+let speed=4;
+if(input["shift"]) speed=7;
+
+if(move.length()>0){
+move.normalize().scaleInPlace(speed);
+let vel=player.physicsImpostor.getLinearVelocity();
+player.physicsImpostor.setLinearVelocity(
+new BABYLON.Vector3(move.x,vel.y,move.z));
+}else{
+let vel=player.physicsImpostor.getLinearVelocity();
+player.physicsImpostor.setLinearVelocity(
+new BABYLON.Vector3(vel.x*0.8,vel.y,vel.z*0.8));
+}
+
+/* ---- LIGHT FLICKER ---- */
+
+if(Math.random()<0.015){
+light.intensity = 0.05 + Math.random()*0.4;
+}
+
+/* ---- REALITY SHIFT (WALLS MOVE SLIGHTLY) ---- */
+
+if(Math.random()<0.003){
+let w = walls[Math.floor(Math.random()*walls.length)];
+w.position.x += (Math.random()-0.5)*2;
+w.position.z += (Math.random()-0.5)*2;
+}
+
+/* ---- ENTITY AI ---- */
+
+let toPlayer = player.position.subtract(entity.position);
+let dist = toPlayer.length();
+
+let dirToEntity = entity.position.subtract(camera.globalPosition).normalize();
+let dot = BABYLON.Vector3.Dot(camera.getForwardRay().direction, dirToEntity);
+let looking = dot > 0.65;
+
+if(!looking){
+entity.moveWithCollisions(toPlayer.normalize().scale(0.03));
+}
+
+/* ---- DREAD BUILD ---- */
+
+entityDistance = BABYLON.Vector3.Distance(player.position,entity.position);
+
+if(entityDistance < 3){
+scene.fogDensity = 0.12;
+}else{
+scene.fogDensity = 0.07;
+}
+
+/* ---- DEBUG ---- */
+
+debugText.innerText =
+"Entity Dist: " + entityDistance.toFixed(2);
+
+});
+
+/* ================= RENDER ================= */
+
+engine.runRenderLoop(()=>scene.render());
+window.addEventListener("resize",()=>engine.resize());
+
+</script>
+</body>
+</html>
