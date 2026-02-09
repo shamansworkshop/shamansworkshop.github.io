@@ -14,17 +14,10 @@
             --md-sys-color-on-primary: #ffffff;
             --md-sys-color-secondary-container: #d3e3fd;
             --md-sys-color-on-secondary-container: #041e49;
-            --md-sys-color-tertiary-container: #ffd8e4;
-            --md-sys-color-on-tertiary-container: #31111d;
             --md-sys-color-surface: #ffffff;
             --md-sys-color-surface-variant: #f0f4f9;
             --md-sys-color-background: #f8f9fa;
             --md-sys-color-outline: #747775;
-            --md-sys-color-error-container: #ffdad6;
-            --md-sys-color-on-error-container: #410002;
-            --md-sys-color-warning-container: #fff8c5;
-            --md-sys-color-on-warning-container: #5c4d00;
-            
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
         }
 
@@ -43,12 +36,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Center content vertically */
+            justify-content: center;
             position: relative;
-            overflow-x: hidden;
+            overflow: hidden; /* Prevent scrolling during transition */
         }
 
-        /* --- Background Animation --- */
+        /* --- Background Animation (Subtle) --- */
         .bg-shape-container {
             position: fixed;
             top: 0;
@@ -60,91 +53,63 @@
             align-items: center;
             justify-content: center;
             pointer-events: none;
-            overflow: hidden;
         }
 
-        .hexagon-spinner {
-            width: 60vh; /* Responsive size based on viewport height */
+        .hexagon-bg {
+            width: 60vh;
             height: 60vh;
             color: var(--md-sys-color-primary);
-            opacity: 0.08; /* Very subtle */
-            animation: spin 10s linear infinite;
+            opacity: 0.05;
+            animation: bg-spin 20s linear infinite;
         }
 
-        @keyframes spin {
+        @keyframes bg-spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
 
         /* --- Main Layout --- */
         .container {
-            max-width: 600px; /* Narrower width for "Setup Screen" feel */
+            max-width: 600px;
             width: 100%;
             padding: 40px 24px;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center everything */
+            align-items: center;
             gap: 32px;
             z-index: 1;
-            /* Glass effect to make text readable over spinner */
             background: rgba(248, 249, 250, 0.6);
             border-radius: 32px;
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        /* Header / Logo Area */
-        header {
-            text-align: center;
-            margin-bottom: 8px;
+        .container.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
         }
 
-        /* Mimic the Google "G" logo or Product Icon space */
-        .logo-placeholder {
-            font-size: 48px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 16px;
-        }
+        /* Header */
+        header { text-align: center; margin-bottom: 8px; }
+        .logo-placeholder { font-size: 48px; color: var(--md-sys-color-primary); margin-bottom: 16px; }
+        h1 { font-size: 36px; font-weight: 400; margin-bottom: 8px; color: #1f1f1f; }
+        .header-subtitle { font-size: 18px; color: #5e5e5e; font-weight: 400; }
+        .hero-text { text-align: center; }
+        .hero-text h2 { font-size: 16px; font-weight: 400; color: #444746; line-height: 1.6; }
 
-        h1 {
-            font-size: 36px; /* Larger, bolder title */
-            font-weight: 400; /* Google Sans style often uses lighter weights for large text */
-            margin-bottom: 8px;
-            color: #1f1f1f;
-        }
-
-        .header-subtitle {
-            font-size: 18px;
-            color: #5e5e5e;
-            font-weight: 400;
-        }
-
-        /* Hero Text */
-        .hero-text {
-            text-align: center;
-        }
-        .hero-text h2 {
-            font-size: 16px;
-            font-weight: 400;
-            color: #444746;
-            line-height: 1.6;
-        }
-
-        /* Primary Action (The "Next" button style) */
-        .primary-action-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
+        /* Buttons */
+        .primary-action-container { width: 100%; display: flex; justify-content: center; }
 
         .fab-extended {
             display: flex;
-            flex-direction: row; /* Horizontal layout for pill shape */
+            flex-direction: row;
             align-items: center;
             justify-content: center;
             gap: 16px;
-            background-color: var(--md-sys-color-primary); /* Solid Primary Color */
+            background-color: var(--md-sys-color-primary);
             color: var(--md-sys-color-on-primary);
             padding: 18px 32px;
-            border-radius: 50px; /* Full Pill Shape */
+            border-radius: 50px;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: var(--md-elevation-1);
@@ -158,114 +123,135 @@
 
         .fab-extended:hover {
             box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15);
-            background-color: #0842a0; /* Slightly darker on hover */
+            background-color: #0842a0;
         }
 
-        .fab-content {
+        .fab-content { display: flex; flex-direction: column; }
+        .fab-title { font-size: 18px; font-weight: 500; line-height: 1.2; }
+        .fab-subtitle { font-size: 12px; opacity: 0.9; font-weight: 400; }
+
+        /* Links & Footer */
+        .links-container { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+        .text-link { color: var(--md-sys-color-primary); text-decoration: none; font-size: 14px; font-weight: 500; padding: 8px 16px; border-radius: 20px; transition: background 0.2s; }
+        .text-link:hover { background-color: rgba(11, 87, 208, 0.08); }
+        footer { margin-top: 32px; font-size: 11px; color: #8e918f; }
+
+        /* Ripple */
+        .ripple {
+            position: absolute; border-radius: 50%; transform: scale(0);
+            animation: ripple 0.6s linear; background-color: rgba(255, 255, 255, 0.3); pointer-events: none;
+        }
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+        /* --- LOADING OVERLAY --- */
+        #loader-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--md-sys-color-background);
+            z-index: 100;
             display: flex;
             flex-direction: column;
-        }
-
-        .fab-title {
-            font-size: 18px;
-            font-weight: 500;
-            line-height: 1.2;
-        }
-        
-        .fab-subtitle {
-            font-size: 12px;
-            opacity: 0.9;
-            font-weight: 400;
-        }
-
-        /* Documentation Links (Secondary Actions) */
-        .links-container {
-            width: 100%;
-            display: flex;
-            flex-wrap: wrap;
+            align-items: center;
             justify-content: center;
-            gap: 12px;
-        }
-
-        .text-link {
-            color: var(--md-sys-color-primary);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 20px;
-            transition: background 0.2s;
-        }
-        
-        .text-link:hover {
-            background-color: rgba(11, 87, 208, 0.08);
-        }
-
-        /* Footer */
-        footer {
-            margin-top: 32px;
-            font-size: 11px;
-            color: #8e918f;
-        }
-
-        /* Ripple Effect */
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            transform: scale(0);
-            animation: ripple 0.6s linear;
-            background-color: rgba(255, 255, 255, 0.3); /* White ripple for primary button */
+            opacity: 0;
             pointer-events: none;
-        }
-        
-        /* Dark ripple for light buttons */
-        .text-link .ripple, .beta-item .ripple {
-            background-color: rgba(0, 0, 0, 0.1);
+            transition: opacity 0.5s ease;
         }
 
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
+        #loader-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
         }
+
+        .loader-hexagon {
+            width: 100px;
+            height: 100px;
+            color: var(--md-sys-color-primary);
+            animation: load-spin-expand 2s infinite ease-in-out;
+            margin-bottom: 40px;
+        }
+
+        @keyframes load-spin-expand {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.4); } /* Expand */
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .progress-container {
+            width: 280px;
+            height: 6px;
+            background-color: var(--md-sys-color-secondary-container);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--md-sys-color-primary);
+            transition: width 0.05s linear;
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            color: #444746;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
     </style>
 </head>
 <body>
 
     <div class="bg-shape-container">
-        <svg class="hexagon-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <svg class="hexagon-bg" viewBox="0 0 100 100">
             <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
-                     fill="none" 
-                     stroke="currentColor" 
-                     stroke-width="1.5" /> <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
-                     fill="currentColor" 
-                     opacity="0.5"/>
+                     fill="none" stroke="currentColor" stroke-width="1.5" />
+            <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
+                     fill="currentColor" opacity="0.3"/>
         </svg>
     </div>
 
-    <div class="container">
+    <div id="loader-overlay">
+        <svg class="loader-hexagon" viewBox="0 0 100 100">
+            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
+                     fill="none" stroke="currentColor" stroke-width="4" />
+            <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
+                     fill="currentColor" opacity="0.8"/>
+        </svg>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-fill"></div>
+        </div>
+        <div class="loading-text" id="loading-status">Initializing...</div>
+    </div>
+
+    <div class="container" id="main-ui">
 
         <header>
             <div class="logo-placeholder">
                 <i class="material-icons-round" style="font-size: 64px;">rocket_launch</i>
             </div>
             <h1>Sand Box 3D</h1>
-            <div class="header-subtitle">HEX Launcher v3</div>
+            <div class="header-subtitle">HEX Launcher v4</div>
         </header>
 
         <section class="hero-text">
-            <h2>Interactive 3D Physics Game<br>Ready to launch.</h2>
+            <h2>Interactive 3D Physics Game<br>Built on Babylon and Cannon<br>Ready to launch.</h2>
         </section>
 
         <div class="primary-action-container">
-            <a href="#" id="btn-launch" class="fab-extended" onclick="createRipple(event)">
+            <button id="btn-launch" class="fab-extended" onclick="initiateLaunch(event)">
                 <i class="material-icons-round" style="font-size: 28px;">play_arrow</i>
                 <div class="fab-content">
                     <span class="fab-title">Play Sand Box 3D</span>
-                    <span class="fab-subtitle" id="version-text">Detecting Device...</span>
+                    <span class="fab-subtitle" id="version-text">Checking Compatibility...</span>
                 </div>
-            </a>
+            </button>
         </div>
 
         <div class="links-container">
@@ -279,32 +265,79 @@
     </div>
 
     <script>
-        // --- DEVICE DETECTION & ROUTING ---
+        // Store the target URL in memory
+        let targetUrl = "";
+
+        // --- DEVICE DETECTION ---
         document.addEventListener("DOMContentLoaded", function() {
             const btn = document.getElementById('btn-launch');
             const versionText = document.getElementById('version-text');
             
-            // Check for Mobile User Agent OR Small Screen Width
+            // Check for Mobile
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 900;
 
             if (isMobile) {
-                // Mobile Version
-                btn.href = "SandBox3D_Mobile.html";
-                versionText.innerText = "Mobile Edition (Touch)";
+                targetUrl = "SandBox3D_Mobile.html";
+                versionText.innerText = "Sand Box 3D for Mobile";
             } else {
-                // PC Version
-                btn.href = "SandBox3D_PC.html";
-                versionText.innerText = "PC Edition (Mouse & Keyboard)";
+                targetUrl = "SandBox3D_PC.html";
+                versionText.innerText = "Sand Box 3D for PC";
             }
         });
 
-        // --- RIPPLE EFFECT ---
+        // --- LAUNCH ANIMATION LOGIC ---
+        function initiateLaunch(event) {
+            // 1. Trigger Ripple
+            createRipple(event);
+
+            // 2. Elements
+            const mainUI = document.getElementById('main-ui');
+            const loader = document.getElementById('loader-overlay');
+            const bar = document.getElementById('progress-fill');
+            const status = document.getElementById('loading-status');
+
+            // 3. Transition UI
+            mainUI.classList.add('fade-out');
+            loader.classList.add('active');
+
+            // 4. Run Loading Simulation
+            let progress = 0;
+            const totalDuration = 3000;
+            const stepTime = 50; 
+            const increment = 100 / (totalDuration / stepTime);
+
+            const interval = setInterval(() => {
+                progress += increment + (Math.random() * 2);
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Launch!
+                    status.innerText = "Launching...";
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 500);
+                }
+
+                // Update Visuals
+                bar.style.width = Math.min(progress, 100) + "%";
+
+                // Update Text Status
+                if (progress < 25) status.innerText = "Initializing...";
+                else if (progress < 50) status.innerText = "Loading Essential Assets...";
+                else if (progress < 75) status.innerText = "Refining...";
+                else if (progress < 99) status.innerText = "Finalizing...";
+
+            }, stepTime);
+        }
+
+        // --- RIPPLE UTILITY ---
         function createRipple(event) {
             const button = event.currentTarget;
             const circle = document.createElement("span");
             const diameter = Math.max(button.clientWidth, button.clientHeight);
             const radius = diameter / 2;
-
             const rect = button.getBoundingClientRect();
 
             circle.style.width = circle.style.height = `${diameter}px`;
@@ -312,10 +345,8 @@
             circle.style.top = `${event.clientY - rect.top - radius}px`;
             circle.classList.add("ripple");
 
-            const ripple = button.getElementsByClassName("ripple")[0];
-            if (ripple) {
-                ripple.remove();
-            }
+            const existingRipple = button.getElementsByClassName("ripple")[0];
+            if (existingRipple) existingRipple.remove();
 
             button.appendChild(circle);
         }
