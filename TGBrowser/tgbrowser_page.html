@@ -26,6 +26,7 @@
             --md-sys-color-on-warning-container: #5c4d00;
             
             --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+            --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -43,9 +44,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Center content vertically */
+            justify-content: center;
             position: relative;
-            overflow: hidden; /* Prevent scrolling during transition */
+            overflow: hidden; 
         }
 
         /* --- Background Animation --- */
@@ -64,10 +65,10 @@
         }
 
         .hexagon-spinner {
-            width: 60vh; /* Responsive size based on viewport height */
+            width: 60vh;
             height: 60vh;
             color: var(--md-sys-color-primary);
-            opacity: 0.08; /* Very subtle */
+            opacity: 0.08;
             animation: spin 10s linear infinite;
         }
 
@@ -78,15 +79,14 @@
 
         /* --- Main Layout --- */
         .container {
-            max-width: 600px; /* Narrower width for "Setup Screen" feel */
+            max-width: 600px;
             width: 100%;
             padding: 40px 24px;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center everything */
+            align-items: center;
             gap: 32px;
             z-index: 1;
-            /* Glass effect to make text readable over spinner */
             background: rgba(248, 249, 250, 0.6);
             border-radius: 32px;
             transition: opacity 0.5s ease, transform 0.5s ease;
@@ -99,59 +99,28 @@
         }
 
         /* Header / Logo Area */
-        header {
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
-        /* Mimic the Google "G" logo or Product Icon space */
-        .logo-placeholder {
-            font-size: 48px;
-            color: var(--md-sys-color-primary);
-            margin-bottom: 16px;
-        }
-
-        h1 {
-            font-size: 36px; /* Larger, bolder title */
-            font-weight: 400; /* Google Sans style often uses lighter weights for large text */
-            margin-bottom: 8px;
-            color: #1f1f1f;
-        }
-
-        .header-subtitle {
-            font-size: 18px;
-            color: #5e5e5e;
-            font-weight: 400;
-        }
+        header { text-align: center; margin-bottom: 8px; }
+        .logo-placeholder { font-size: 48px; color: var(--md-sys-color-primary); margin-bottom: 16px; }
+        h1 { font-size: 36px; font-weight: 400; margin-bottom: 8px; color: #1f1f1f; }
+        .header-subtitle { font-size: 18px; color: #5e5e5e; font-weight: 400; }
 
         /* Hero Text */
-        .hero-text {
-            text-align: center;
-        }
-        .hero-text h2 {
-            font-size: 16px;
-            font-weight: 400;
-            color: #444746;
-            line-height: 1.6;
-        }
+        .hero-text { text-align: center; }
+        .hero-text h2 { font-size: 16px; font-weight: 400; color: #444746; line-height: 1.6; }
 
-        /* Primary Action (The "Next" button style) */
-        .primary-action-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
+        /* Primary Action */
+        .primary-action-container { width: 100%; display: flex; justify-content: center; }
 
         .fab-extended {
             display: flex;
-            flex-direction: row; /* Horizontal layout for pill shape */
+            flex-direction: row;
             align-items: center;
             justify-content: center;
             gap: 16px;
-            background-color: var(--md-sys-color-primary); /* Solid Primary Color */
+            background-color: var(--md-sys-color-primary);
             color: var(--md-sys-color-on-primary);
             padding: 18px 32px;
-            border-radius: 50px; /* Full Pill Shape */
+            border-radius: 50px;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: var(--md-elevation-1);
@@ -165,27 +134,14 @@
 
         .fab-extended:hover {
             box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15);
-            background-color: #0842a0; /* Slightly darker on hover */
+            background-color: #0842a0;
         }
 
-        .fab-content {
-            display: flex;
-            flex-direction: column;
-        }
+        .fab-content { display: flex; flex-direction: column; }
+        .fab-title { font-size: 18px; font-weight: 500; line-height: 1.2; }
+        .fab-subtitle { font-size: 12px; opacity: 0.9; font-weight: 400; }
 
-        .fab-title {
-            font-size: 18px;
-            font-weight: 500;
-            line-height: 1.2;
-        }
-        
-        .fab-subtitle {
-            font-size: 12px;
-            opacity: 0.9;
-            font-weight: 400;
-        }
-
-        /* Documentation Links (Secondary Actions) */
+        /* Documentation Links */
         .links-container {
             width: 100%;
             display: flex;
@@ -204,16 +160,10 @@
             transition: background 0.2s;
         }
         
-        .text-link:hover {
-            background-color: rgba(11, 87, 208, 0.08);
-        }
+        .text-link:hover { background-color: rgba(11, 87, 208, 0.08); }
 
-        /* Beta Section (Subtle toggle at bottom) */
-        .beta-wrapper {
-            margin-top: 16px;
-            text-align: center;
-            width: 100%;
-        }
+        /* Beta Button */
+        .beta-wrapper { margin-top: 16px; text-align: center; width: 100%; }
 
         .beta-toggle-btn {
             background: transparent;
@@ -235,56 +185,8 @@
             border-color: var(--md-sys-color-outline);
         }
 
-        .beta-content {
-            display: none;
-            margin-top: 20px;
-            text-align: left;
-            animation: slideDown 0.3s ease-out;
-            background: var(--md-sys-color-surface);
-            padding: 16px;
-            border-radius: 24px;
-            border: 1px solid #e0e2e0;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .beta-content.active {
-            display: block;
-        }
-
-        .beta-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .beta-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 16px;
-            border-radius: 16px; /* Softer corners */
-            text-decoration: none;
-            color: #1f1f1f;
-            cursor: pointer;
-            transition: background 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .beta-item:hover {
-            background-color: var(--md-sys-color-surface-variant);
-        }
-
         /* Footer */
-        footer {
-            margin-top: 32px;
-            font-size: 11px;
-            color: #8e918f;
-        }
+        footer { margin-top: 32px; font-size: 11px; color: #8e918f; }
 
         /* Ripple Effect */
         .ripple {
@@ -292,21 +194,104 @@
             border-radius: 50%;
             transform: scale(0);
             animation: ripple 0.6s linear;
-            background-color: rgba(255, 255, 255, 0.3); /* White ripple for primary button */
+            background-color: rgba(255, 255, 255, 0.3);
             pointer-events: none;
         }
-        
-        /* Dark ripple for light buttons */
-        .text-link .ripple, .beta-item .ripple {
-            background-color: rgba(0, 0, 0, 0.1);
+        .text-link .ripple, .beta-item .ripple { background-color: rgba(0, 0, 0, 0.1); }
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+        /* --- POP-UP MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Dimmed background */
+            z-index: 200; /* Higher than main content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(2px);
         }
 
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
         }
+
+        .modal-box {
+            background-color: var(--md-sys-color-surface);
+            width: 90%;
+            max-width: 320px;
+            border-radius: 28px; /* MD3 Dialog Radius */
+            padding: 24px;
+            box-shadow: var(--md-elevation-3);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.open .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #1f1f1f;
+        }
+
+        .modal-icon {
+            color: #444746;
+            margin-bottom: 16px;
+        }
+
+        .beta-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .beta-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #1f1f1f;
+            cursor: pointer;
+            transition: background 0.2s;
+            background-color: var(--md-sys-color-surface-variant); /* Slight bg for items */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .beta-item:hover { background-color: #e2e7ec; }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-text {
+            background: none;
+            border: none;
+            color: var(--md-sys-color-primary);
+            font-weight: 500;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-text:hover { background-color: rgba(11, 87, 208, 0.08); }
 
         /* --- LOADING OVERLAY --- */
         #loader-overlay {
@@ -322,15 +307,10 @@
             pointer-events: none;
             transition: opacity 0.5s ease;
         }
-
-        #loader-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        #loader-overlay.active { opacity: 1; pointer-events: auto; }
 
         .loader-hexagon {
-            width: 100px;
-            height: 100px;
+            width: 100px; height: 100px;
             color: var(--md-sys-color-primary);
             animation: load-spin-expand 2s infinite ease-in-out;
             margin-bottom: 40px;
@@ -338,70 +318,40 @@
 
         @keyframes load-spin-expand {
             0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.4); } /* Expand */
+            50% { transform: rotate(180deg) scale(1.4); } 
             100% { transform: rotate(360deg) scale(1); }
         }
 
         .progress-container {
-            width: 280px;
-            height: 6px;
+            width: 280px; height: 6px;
             background-color: var(--md-sys-color-secondary-container);
-            border-radius: 3px;
-            overflow: hidden;
-            position: relative;
+            border-radius: 3px; overflow: hidden; position: relative;
         }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background-color: var(--md-sys-color-primary);
-            transition: width 0.05s linear;
-        }
-
-        .loading-text {
-            margin-top: 20px;
-            font-family: 'Roboto', sans-serif;
-            font-size: 14px;
-            color: #444746;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+        .progress-bar { height: 100%; width: 0%; background-color: var(--md-sys-color-primary); transition: width 0.05s linear; }
+        .loading-text { margin-top: 20px; font-family: 'Roboto', sans-serif; font-size: 14px; color: #444746; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <div class="bg-shape-container">
         <svg class="hexagon-spinner" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
-                     fill="none" 
-                     stroke="currentColor" 
-                     stroke-width="1.5" /> <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
-                     fill="currentColor" 
-                     opacity="0.5"/>
+            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" fill="none" stroke="currentColor" stroke-width="1.5" /> 
+            <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" fill="currentColor" opacity="0.5"/>
         </svg>
     </div>
 
     <div id="loader-overlay">
         <svg class="loader-hexagon" viewBox="0 0 100 100">
-            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" 
-                     fill="none" stroke="currentColor" stroke-width="4" />
-            <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" 
-                     fill="currentColor" opacity="0.8"/>
+            <polygon points="50 5, 95 27.5, 95 72.5, 50 95, 5 72.5, 5 27.5" fill="none" stroke="currentColor" stroke-width="4" />
+            <polygon points="50 25, 72.5 36.25, 72.5 63.75, 50 75, 27.5 63.75, 27.5 36.25" fill="currentColor" opacity="0.8"/>
         </svg>
-
-        <div class="progress-container">
-            <div class="progress-bar" id="progress-fill"></div>
-        </div>
+        <div class="progress-container"><div class="progress-bar" id="progress-fill"></div></div>
         <div class="loading-text" id="loading-status">Initializing...</div>
     </div>
 
     <div class="container" id="main-ui">
-
         <header>
-            <div class="logo-placeholder">
-                <i class="material-icons-round" style="font-size: 64px;">rocket_launch</i>
-            </div>
+            <div class="logo-placeholder"><i class="material-icons-round" style="font-size: 64px;">rocket_launch</i></div>
             <h1>TGBrowser</h1>
             <div class="header-subtitle">HEX Launcher v4</div>
         </header>
@@ -428,46 +378,70 @@
         </div>
 
         <div class="beta-wrapper">
-            <button class="beta-toggle-btn" onclick="toggleBeta()">
+            <button class="beta-toggle-btn" onclick="openBetaModal()">
                 <i class="material-icons-round" style="font-size: 16px;">science</i>
                 Advanced Options
             </button>
-
-            <div class="beta-content" id="betaContent">
-                <div style="font-size: 12px; color: #b3261e; margin-bottom: 12px; font-weight: 500;">
-                    <i class="material-icons-round" style="font-size: 12px; vertical-align: text-top;">warning</i>
-                    Beta releases may be unstable.
-                </div>
-
-                <div class="beta-list">
-                    <a href="#" class="beta-item" onclick="initiateLaunch(event, 'https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/beta/tgbrowser_beta6.html')">
-                        <span style="font-weight: 500;">Beta 6</span>
-                        <span style="font-size: 12px; color: #5e5e5e;">v26.01.22a</span>
-                    </a>
-                    
-                    <a href="#" class="beta-item" onclick="initiateLaunch(event, 'https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/beta/tgbrowser_beta4.html')">
-                        <span style="font-weight: 500;">Beta 4</span>
-                        <span style="font-size: 12px; color: #5e5e5e;">v25.12.20b-br1</span>
-                    </a>
-                </div>
-            </div>
         </div>
 
         <footer>
             <p>2025-2026 Shaman's Workshop</p>
         </footer>
+    </div>
 
+    <div id="beta-modal" class="modal-overlay" onclick="handleOverlayClick(event)">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <i class="material-icons-round" style="font-size: 32px;">science</i>
+            </div>
+            <h3 class="modal-header modal-title">Advanced Options</h3>
+            
+            <div style="font-size: 12px; color: #b3261e; margin-bottom: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                <i class="material-icons-round" style="font-size: 14px;">warning</i>
+                Beta releases may be unstable.
+            </div>
+
+            <div class="beta-list">
+                <a href="#" class="beta-item" onclick="initiateLaunch(event, 'https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/beta/tgbrowser_beta6.html')">
+                    <span style="font-weight: 500;">Beta 6</span>
+                    <span style="font-size: 12px; color: #5e5e5e;">v26.01.22a</span>
+                </a>
+                
+                <a href="#" class="beta-item" onclick="initiateLaunch(event, 'https://shamansworkshop.github.io/TGBrowser/tgbrowser-main/beta/tgbrowser_beta4.html')">
+                    <span style="font-weight: 500;">Beta 4</span>
+                    <span style="font-size: 12px; color: #5e5e5e;">v25.12.20b-br1</span>
+                </a>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-text" onclick="closeBetaModal()">Close</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        function toggleBeta() {
-            const betaContent = document.getElementById('betaContent');
-            betaContent.classList.toggle('active');
+        // --- MODAL LOGIC ---
+        function openBetaModal() {
+            document.getElementById('beta-modal').classList.add('open');
+        }
+
+        function closeBetaModal() {
+            document.getElementById('beta-modal').classList.remove('open');
+        }
+
+        // Close if user clicks the dark background (overlay) but not the box
+        function handleOverlayClick(event) {
+            if (event.target.id === 'beta-modal') {
+                closeBetaModal();
+            }
         }
 
         // --- LAUNCH ANIMATION LOGIC ---
         function initiateLaunch(event, targetUrl) {
-            event.preventDefault(); // Prevent immediate navigation
+            event.preventDefault(); 
+
+            // Close modal if open
+            closeBetaModal();
 
             // 1. Trigger Ripple
             createRipple(event);
