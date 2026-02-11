@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shaman's Workshop</title>
+    <title>HEXON Laboratories</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     
     <style>
         :root {
-            /* MD3 Color Tokens */
-            --md-sys-color-primary: #0b57d0;
-            --md-sys-color-on-primary: #ffffff;
-            --md-sys-color-secondary-container: #d3e3fd;
-            --md-sys-color-on-secondary-container: #041e49;
-            --md-sys-color-surface: #ffffff;
-            --md-sys-color-surface-variant: #f0f4f9;
-            --md-sys-color-background: #f8f9fa;
-            --md-sys-color-outline: #747775;
+            /* RECOLORED: Monochrome Black/White Tokens */
+            --md-sys-color-primary: #ffffff;
+            --md-sys-color-on-primary: #000000;
+            --md-sys-color-secondary-container: #333333;
+            --md-sys-color-on-secondary-container: #ffffff;
+            --md-sys-color-surface: #121212;
+            --md-sys-color-surface-variant: #1e1e1e;
+            --md-sys-color-background: #000000;
+            --md-sys-color-outline: #444444;
             
-            --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
-            --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+
+            --md-elevation-1: 0px 1px 3px 1px rgba(255, 255, 255, 0.05), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+            --md-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.5), 0px 1px 3px 0px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -33,7 +37,7 @@
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--md-sys-color-background);
-            color: #1f1f1f;
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -53,7 +57,7 @@
         }
 
         .hexagon-spinner {
-            width: 65vh; height: 65vh; color: var(--md-sys-color-primary); opacity: 0.08;
+            width: 65vh; height: 65vh; color: var(--md-sys-color-primary); opacity: 0.05;
             animation: spin 12s linear infinite;
         }
 
@@ -63,14 +67,17 @@
         .container {
             max-width: 500px; width: 100%; padding: 40px 24px;
             display: flex; flex-direction: column; gap: 24px; z-index: 1;
-            background: rgba(248, 249, 250, 0.65); border-radius: 32px; margin: 20px;
+            /* Dark glass effect */
+            background: rgba(20, 20, 20, 0.85); 
+            border: 1px solid #333;
+            border-radius: 32px; margin: 20px;
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
 
         header { text-align: center; margin-bottom: 8px; }
         .logo-icon { font-size: 56px; color: var(--md-sys-color-primary); margin-bottom: 16px; }
-        h1 { font-size: 32px; font-weight: 400; color: #1f1f1f; margin-bottom: 4px; }
-        .subtitle { font-size: 16px; color: #5e5e5e; font-weight: 400; }
+        h1 { font-size: 32px; font-weight: 400; color: var(--text-primary); margin-bottom: 4px; }
+        .subtitle { font-size: 16px; color: var(--text-secondary); font-weight: 400; }
 
         /* Primary Action (GitHub) */
         .primary-action-container { display: flex; justify-content: center; margin-bottom: 8px; }
@@ -82,7 +89,7 @@
             transition: all 0.2s ease; box-shadow: var(--md-elevation-1); border: none;
             cursor: pointer; width: 100%; font-size: 16px; font-weight: 500; position: relative; overflow: hidden;
         }
-        .fab-primary:hover { background-color: #0842a0; box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15); }
+        .fab-primary:hover { background-color: #e0e0e0; box-shadow: 0 4px 12px rgba(255,255,255,0.15); }
 
         /* --- Category Cards (Main Menu) --- */
         .category-grid {
@@ -94,15 +101,16 @@
         .category-card {
             display: flex; align-items: center; gap: 16px;
             background-color: var(--md-sys-color-surface); padding: 20px;
-            border-radius: 24px; text-decoration: none; color: #1f1f1f;
+            border-radius: 24px; text-decoration: none; color: var(--text-primary);
             transition: all 0.2s; position: relative; overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.05); cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid var(--md-sys-color-outline); cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
 
         .category-card:hover {
             background-color: var(--md-sys-color-surface-variant);
             transform: translateY(-2px);
+            border-color: #666;
             box-shadow: var(--md-elevation-1);
         }
 
@@ -116,18 +124,18 @@
 
         .category-info { flex-grow: 1; }
         .category-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
-        .category-desc { font-size: 12px; color: #5e5e5e; }
+        .category-desc { font-size: 12px; color: var(--text-secondary); }
 
         /* Footer */
-        footer { margin-top: 16px; text-align: center; font-size: 11px; color: #8e918f; }
+        footer { margin-top: 16px; text-align: center; font-size: 11px; color: #555; }
 
         /* --- MODAL STYLES --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); z-index: 200;
+            background-color: rgba(0, 0, 0, 0.85); z-index: 200;
             display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
 
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
@@ -135,6 +143,7 @@
         .modal-box {
             background-color: var(--md-sys-color-surface); width: 90%; max-width: 400px;
             border-radius: 28px; padding: 24px; box-shadow: var(--md-elevation-3);
+            border: 1px solid var(--md-sys-color-outline);
             transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
             display: flex; flex-direction: column; max-height: 80vh; overflow-y: auto;
         }
@@ -142,7 +151,7 @@
         .modal-overlay.open .modal-box { transform: scale(1); }
 
         .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-        .modal-title { font-size: 22px; color: #1f1f1f; font-weight: 400; }
+        .modal-title { font-size: 22px; color: var(--text-primary); font-weight: 400; }
         
         .list-group { display: flex; flex-direction: column; gap: 8px; }
 
@@ -151,31 +160,33 @@
             display: flex; align-items: center; gap: 16px;
             background-color: var(--md-sys-color-surface-variant);
             padding: 16px; border-radius: 16px; text-decoration: none;
-            color: #1f1f1f; transition: background-color 0.2s;
+            color: var(--text-primary); transition: background-color 0.2s;
             position: relative; overflow: hidden;
+            border: 1px solid transparent;
         }
-        .list-item:hover { background-color: #e2e7ec; }
+        .list-item:hover { background-color: #2a2a2a; border-color: #444; }
 
-        .item-icon { color: #5e5e5e; font-size: 24px; }
+        .item-icon { color: var(--text-secondary); font-size: 24px; }
         .item-content { flex-grow: 1; }
         .item-title { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
-        .item-subtitle { font-size: 12px; color: #5e5e5e; }
-        .item-arrow { color: #bcbcbc; font-size: 20px; }
+        .item-subtitle { font-size: 12px; color: var(--text-secondary); }
+        .item-arrow { color: #666; font-size: 20px; }
 
         .modal-close-btn {
             align-self: flex-end; margin-top: 16px;
-            background: none; border: none; color: var(--md-sys-color-primary);
-            font-weight: 500; font-size: 14px; padding: 10px 20px;
+            background: none; border: 1px solid var(--md-sys-color-outline); 
+            color: var(--md-sys-color-primary);
+            font-weight: 500; font-size: 14px; padding: 10px 24px;
             border-radius: 20px; cursor: pointer; transition: background 0.2s;
         }
-        .modal-close-btn:hover { background-color: rgba(11, 87, 208, 0.08); }
+        .modal-close-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: #fff; }
 
         /* Ripple */
         .ripple {
             position: absolute; border-radius: 50%; transform: scale(0);
-            animation: ripple 0.6s linear; background-color: rgba(0, 0, 0, 0.1); pointer-events: none;
+            animation: ripple 0.6s linear; background-color: rgba(255, 255, 255, 0.2); pointer-events: none;
         }
-        .fab-primary .ripple { background-color: rgba(255, 255, 255, 0.3); }
+        .fab-primary .ripple { background-color: rgba(0, 0, 0, 0.2); }
         @keyframes ripple { to { transform: scale(4); opacity: 0; } }
     </style>
 </head>
@@ -192,9 +203,8 @@
         
         <header>
             <i class="material-icons-round logo-icon">handyman</i>
-            <h1>Shaman's Workshop</h1>
+            <h1>HEXON Labs</h1>
             <div class="subtitle">Master Shaman's Project Hub</div>
-            <div class="subtitle">HEX Workshop v4</div>
         </header>
 
         <div class="primary-action-container">
@@ -214,7 +224,7 @@
                     <div class="category-title">TGBrowser Ecosystem</div>
                     <div class="category-desc">Browser, Extensions & Lab</div>
                 </div>
-                <i class="material-icons-round" style="color: #bcbcbc;">chevron_right</i>
+                <i class="material-icons-round" style="color: #666;">chevron_right</i>
             </div>
 
             <div class="category-card" onclick="openModal('modal-3d'); createRipple(event)">
@@ -225,7 +235,7 @@
                     <div class="category-title">3D Architecture</div>
                     <div class="category-desc">Physics & Rendering</div>
                 </div>
-                <i class="material-icons-round" style="color: #bcbcbc;">chevron_right</i>
+                <i class="material-icons-round" style="color: #666;">chevron_right</i>
             </div>
 
             <div class="category-card" onclick="openModal('modal-other'); createRipple(event)">
@@ -236,13 +246,13 @@
                     <div class="category-title">Other Projects</div>
                     <div class="category-desc">Utilities & Games</div>
                 </div>
-                <i class="material-icons-round" style="color: #bcbcbc;">chevron_right</i>
+                <i class="material-icons-round" style="color: #666;">chevron_right</i>
             </div>
 
         </div>
 
         <footer>
-            <p>2025-2026 Shaman's Workshop</p>
+            <p>2025-2026 HEXON Laboratories</p>
         </footer>
 
     </div>
@@ -348,9 +358,7 @@
 
     <script>
         function openModal(modalId) {
-            // Close any currently open modal first
             closeAllModals();
-            // Open the requested one
             document.getElementById(modalId).classList.add('open');
         }
 
@@ -362,7 +370,6 @@
         }
 
         function handleOverlayClick(event) {
-            // Close if clicking the overlay (background) directly
             if (event.target.classList.contains('modal-overlay')) {
                 closeAllModals();
             }
