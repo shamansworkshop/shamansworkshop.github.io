@@ -175,6 +175,47 @@
             border: 1px solid #fff;
         }
 
+        .icon-throw { 
+            background: transparent; 
+            width: 10px; height: 10px; 
+            border-top: 2px solid #fff; 
+            border-right: 2px solid #fff; 
+            border-radius: 0 5px 0 0; 
+            transform: rotate(-15deg);
+        }
+        
+        .action-btn-overlay {
+            position: absolute;
+            bottom: 170px; /* Just above the 130px Look Pad */
+            right: 45px;   /* Aligned with the pad */
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(243, 156, 18, 0.3); /* Transparent Orange */
+            border: 2px solid #f39c12;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 15;
+            touch-action: manipulation;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+        .action-btn-overlay:active {
+            background: rgba(243, 156, 18, 0.8);
+            transform: scale(0.95);
+        }
+
+        .icon-structure {
+            background: transparent;
+            width: 10px; height: 10px;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 0 #ccc;
+        }
+
         button#btn-enter-game { background: #27ae60; border-color: #2ecc71; justify-content: center; font-weight: bold; margin-bottom: 5px; }
         
         /* Upload Button */
@@ -192,6 +233,10 @@
         button#btn-build { border-left: 4px solid #e91e63; }
         button#btn-freeze.thaw-mode { border-left-color: #e67e22; }
         button#btn-freeze.thaw-mode.active { background: #a04000; border-color: #e67e22; }
+        button#btn-throw { border-left: 4px solid #f39c12; }
+        button#btn-throw.active { background: #7e5109; border-color: #f39c12; }
+        button#btn-structure { border-left: 4px solid #9b59b6; }
+        button#btn-structure.active { background: #4a235a; border-color: #9b59b6; }
 
         /* Custom Model Button */
         button#btn-custom { border-left: 4px solid #f39c12; }
@@ -331,6 +376,16 @@
                 <button id="btn-view" onclick="toggleViewMode()">
                     <span class="shape-icon icon-eye"></span> Possess Object
                 </button>
+                <button id="btn-throw" onclick="selectShape('throw')">
+                    <span class="shape-icon icon-throw"></span> Throw Object
+                </button>
+                <div id="throw-settings" class="slider-group" style="display: none; margin-top: 5px; border-left: 3px solid #f39c12;">
+                    <div class="slider-label">
+                        <span>Throw Power</span>
+                        <span id="throw-display">50</span>
+                    </div>
+                    <input type="range" id="throw-slider" min="10" max="200" step="5" value="50" oninput="updateThrowForce(this.value)">
+                </div>
                 <button id="btn-push" onclick="selectShape('push')">
                     <span class="shape-icon icon-hand"></span> Force Push
                 </button>
@@ -380,6 +435,26 @@
                 </div>
                 <input type="range" id="mass-slider" min="0.1" max="100.0" step="0.1" value="1.5" oninput="updateMass(this.value)">
             </div>
+            <div id="structure-settings" class="slider-group" style="display: none; border-left: 3px solid #9b59b6;">
+                <div class="slider-label"><span>Grid Size (L x H x W)</span></div>
+                <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                    <input type="number" id="struct-x" value="5" min="1" max="20"
+                        style="width: 30%; background: #333; color: white; border: 1px solid #555; padding: 4px; border-radius: 4px;">
+                    <input type="number" id="struct-y" value="5" min="1" max="20"
+                        style="width: 30%; background: #333; color: white; border: 1px solid #555; padding: 4px; border-radius: 4px;">
+                    <input type="number" id="struct-z" value="1" min="1" max="20"
+                        style="width: 30%; background: #333; color: white; border: 1px solid #555; padding: 4px; border-radius: 4px;">
+                </div>
+            
+                <div class="slider-label"><span>Block Type</span></div>
+                <select id="struct-shape"
+                    style="width: 100%; background: #333; color: white; border: 1px solid #555; padding: 5px; border-radius: 4px;">
+                    <option value="box">Cube</option>
+                    <option value="sphere">Sphere</option>
+                    <option value="cylinder">Cylinder</option>
+                    <option value="triangle">Triangle</option>
+                </select>
+            </div>
 
             <div class="slider-group">
                 <div class="slider-label"><span>Color</span></div>
@@ -408,6 +483,9 @@
                 </button>
                 <button id="btn-tri" onclick="selectShape('triangle')">
                     <span class="shape-icon icon-tri"></span> Triangle
+                </button>
+                <button id="btn-structure" onclick="selectShape('structure')">
+                    <span class="shape-icon icon-structure"></span> Structure
                 </button>
             </div>
 
@@ -443,6 +521,7 @@
         <div class="d-btn btn-d" id="btn-look-down">▼</div>
     </div>
 
+    <button id="btn-action-throw" class="action-btn-overlay" onclick="triggerThrow()" style="display: none;">THROW</button>
     <canvas id="renderCanvas"></canvas>
 
     <script>
@@ -458,8 +537,8 @@
         let spawnedMeshes = [];    
         let sceneRef = null;
         let viewTargetMesh = null; 
+        let throwForce = 50;
 
-        // New Variable for Custom Models
         let customModelTemplate = null;
 
         const moveState = { up: false, down: false, left: false, right: false };
@@ -547,6 +626,46 @@
             }
         }
 
+        function updateThrowForce(val) {
+                throwForce = parseFloat(val);
+                document.getElementById('throw-display').innerText = throwForce;
+            }
+
+            function triggerThrow() {
+                // This function is called by the big overlay button
+                const sb3d = workshop.shaman.sandbox3d;
+                if (!sb3d.scene || !sb3d.cameraFree) return;
+
+                const cam = sb3d.cameraFree;
+                const forward = cam.getDirection(BABYLON.Vector3.Forward());
+
+                // 1. Create Projectile
+                const projectile = BABYLON.MeshBuilder.CreateSphere("projectile", { diameter: 0.5 }, sb3d.scene);
+                // Spawn 1.5 units in front of camera (center)
+                projectile.position = cam.position.add(forward.scale(1.5));
+
+                // 2. Material
+                const pMat = new BABYLON.StandardMaterial("pMat", sb3d.scene);
+                pMat.diffuseColor = new BABYLON.Color3(0.9, 0.9, 1.0);
+                projectile.material = pMat;
+
+                // 3. Physics
+                projectile.physicsImpostor = new BABYLON.PhysicsImpostor(
+                    projectile,
+                    BABYLON.PhysicsImpostor.SphereImpostor,
+                    { mass: 1, restitution: 0.5, friction: 0.5 },
+                    sb3d.scene
+                );
+
+                // 4. Force
+                projectile.physicsImpostor.applyImpulse(
+                    forward.scale(throwForce),
+                    projectile.getAbsolutePosition()
+                );
+
+                spawnedMeshes.push(projectile);
+            }
+
         function toggleLeftUI() {
             const left = document.getElementById('left-panel');
             const right = document.getElementById('right-panel');
@@ -633,6 +752,9 @@
             selectedShape = shape;
             
             const instruct = document.getElementById('txt-instruct');
+            const throwSettings = document.getElementById('throw-settings');
+            const throwBtn = document.getElementById('btn-action-throw');
+            const structSettings = document.getElementById('structure-settings');
             
             document.querySelectorAll('button').forEach(b => {
                 if(!b.classList.contains('btn-minimize') && b.id !== 'btn-enter-game' && b.id !== 'btn-build' && b.id !== 'btn-upload') {
@@ -643,6 +765,21 @@
             if (shape === 'none') {
                 isBuildMode = false;
                 document.getElementById('btn-build').classList.remove('active');
+            }
+
+            if (shape === 'throw') {
+                throwSettings.style.display = 'block';
+                throwBtn.style.display = 'flex'; // Show the Big Button
+            } else {
+                throwSettings.style.display = 'none';
+                throwBtn.style.display = 'none'; // Hide the Big Button
+            }
+
+            if (shape === 'structure') {
+                structSettings.style.display = 'block';
+                instruct.innerHTML = "<b>Click</b>: Spawn Structure<br>Adjust L/H/W in Objects Panel.";
+            } else {
+                structSettings.style.display = 'none';
             }
 
             if (shape === 'view') {
@@ -659,7 +796,6 @@
             if (shape === 'triangle') btnId = 'btn-tri';
             if (shape === 'frag_bomb') btnId = 'btn-frag';
             if (shape === 'flashbang') btnId = 'btn-flashbang';
-            // btn-custom matches automatically via 'btn-' + shape
             
             const activeBtn = document.getElementById(btnId);
             if(activeBtn) activeBtn.classList.add('active');
@@ -997,6 +1133,11 @@
                                         }
                                         return;
                                     }
+
+                                    if (selectedShape === 'structure') {
+                                        this.spawnStructure(pickInfo, scene);
+                                        return;
+                                    }
                                     
                                     if (selectedShape === 'push') {
                                         if (mesh.physicsImpostor && mesh.physicsImpostor.mass > 0) {
@@ -1100,6 +1241,78 @@
                                 pickInfo.pickedMesh.physicsImpostor.addJoint(mesh.physicsImpostor, joint);
                                 if(mesh.material) mesh.material.emissiveColor = new BABYLON.Color3(0, 0, 0);
                             }
+                            spawnedMeshes.push(mesh);
+                        }
+                    },
+
+                    spawnStructure: function (pickInfo, scene) {
+                        const normal = pickInfo.getNormal(true);
+                        if (!normal) return;
+
+                        // Get Dimensions from Input
+                        // We clamp them to avoid crashing the browser with 10000 blocks
+                        let dimX = parseInt(document.getElementById('struct-x').value) || 1;
+                        let dimY = parseInt(document.getElementById('struct-y').value) || 1;
+                        let dimZ = parseInt(document.getElementById('struct-z').value) || 1;
+
+                        // Hard Cap for safety (Max 10x10x10)
+                        if (dimX > 10) dimX = 10;
+                        if (dimY > 10) dimY = 10;
+                        if (dimZ > 10) dimZ = 10;
+
+                        const shapeType = document.getElementById('struct-shape').value;
+                        const scale = currentSize;
+
+                        // Calculate Start Position (Offset so it builds UP and OUT from the click)
+                        // We add a tiny gap (scale * 1.02) to prevent immediate physics explosion
+                        const gap = scale * 1.02;
+                        const startPos = pickInfo.pickedPoint.add(normal.scale(scale / 2));
+
+                        for (let x = 0; x < dimX; x++) {
+                            for (let y = 0; y < dimY; y++) {
+                                for (let z = 0; z < dimZ; z++) {
+
+                                    // Calculate Offset
+                                    const offsetX = (x - dimX / 2) * gap; // Center X
+                                    const offsetY = y * gap;            // Build Up Y
+                                    const offsetZ = (z - dimZ / 2) * gap; // Center Z
+
+                                    const spawnPos = startPos.add(new BABYLON.Vector3(offsetX, offsetY, offsetZ));
+
+                                    // We reuse the logic from spawnObject, but we need to bypass the 'pickInfo' requirement.
+                                    // So we simply create the mesh directly here to keep it fast.
+                                    this.createSingleBlock(shapeType, spawnPos, scale, scene);
+                                }
+                            }
+                        }
+                    },
+
+                    createSingleBlock: function (type, position, scale, scene) {
+                        let mesh;
+                        const mat = new BABYLON.StandardMaterial("structMat" + Date.now() + Math.random(), scene);
+                        const pickerVal = document.getElementById('color-picker').value;
+                        mat.diffuseColor = BABYLON.Color3.FromHexString(pickerVal);
+
+                        if (type === 'box') mesh = BABYLON.MeshBuilder.CreateBox("s_box", { size: scale }, scene);
+                        else if (type === 'sphere') mesh = BABYLON.MeshBuilder.CreateSphere("s_sphere", { diameter: scale }, scene);
+                        else if (type === 'cylinder') mesh = BABYLON.MeshBuilder.CreateCylinder("s_cyl", { height: scale, diameter: scale / 2 }, scene);
+                        else if (type === 'triangle') mesh = BABYLON.MeshBuilder.CreateCylinder("s_tri", { height: scale, diameter: scale, tessellation: 3 }, scene);
+
+                        if (mesh) {
+                            mesh.position = position;
+                            mesh.material = mat;
+
+                            // Physics
+                            let impostorType = BABYLON.PhysicsImpostor.BoxImpostor;
+                            if (type === 'sphere') impostorType = BABYLON.PhysicsImpostor.SphereImpostor;
+                            if (type === 'cylinder' || type === 'triangle') impostorType = BABYLON.PhysicsImpostor.CylinderImpostor;
+
+                            mesh.physicsImpostor = new BABYLON.PhysicsImpostor(mesh, impostorType, {
+                                mass: currentMass,
+                                restitution: 0.1,
+                                friction: 0.8
+                            }, scene);
+
                             spawnedMeshes.push(mesh);
                         }
                     },
