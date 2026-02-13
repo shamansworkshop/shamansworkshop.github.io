@@ -535,7 +535,7 @@
 
             // Try to load standard Mod (legacy Loader, Note: Ensure your standard mod has a register() call now!)
             // We use the ID assumption or path
-            window.TGMoLink.inject('https://shamansworkshop.github.io/ModsPort-TGMod/'); 
+            window.TGMoLink.inject('https://hexonlabs.github.io/ModsPort-TGMod/'); 
         }
 
         function loadSettings() {
@@ -687,10 +687,10 @@
                 
                 if (isID) {
                     // Assume the folder is named after the ID
-                    path = 'https://shamansworkshop.github.io/tgplugs/' + val;
+                    path = 'https://hexonlabs.github.io/tgplugs/' + val;
                 } else {
                     // Lazy Name (Folder)
-                    path = 'https://shamansworkshop.github.io/tgplugs/' + val;
+                    path = 'https://hexonlabs.github.io/tgplugs/' + val;
                 }
                 
                 window.TGMoLink.inject(path);
@@ -732,7 +732,7 @@
 
         // About Button
         infoFileBtn.addEventListener('click', () => {
-            createIframe('https://shamansworkshop.github.io/TGBrowser/tgb_info');
+            createIframe('https://hexonlabs.github.io/TGBrowser/tgb_info');
             menuContent.style.display = 'none';
         });
 
