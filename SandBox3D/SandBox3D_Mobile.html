@@ -960,6 +960,12 @@
                         this.engine.runRenderLoop(() => {
                             const now = performance.now();
                             const currentFPS = this.engine.getFps();
+                            
+                            this.cullingFrameCount++;
+                            if (this.cullingFrameCount > this.cullingRate) {
+                                this.cullingFrameCount = 0;
+                                this.handleDistanceCulling();
+                            }
 
                             if (fpsDiv) {
                                 fpsDiv.innerText = "FPS: " + currentFPS.toFixed(0);
