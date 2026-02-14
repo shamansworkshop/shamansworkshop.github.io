@@ -322,12 +322,19 @@
                     </div>
                 </div>
                 <div class="slider-group">
-                    <div class="slider-label"><span>View Distance</span><span id="val-view">500m</span></div>
+                    <div class="slider-label"><span>Render Distance</span><span id="val-view">500m</span></div>
                     <input type="range" id="opt-view" min="50" max="1500" value="500" step="50" oninput="updateGameSettings()">
                 </div>
                 <div class="slider-group">
                     <div class="slider-label"><span>FOV (Camera)</span><span id="val-fov">1.2</span></div>
                     <input type="range" id="opt-fov" min="0.5" max="2.5" value="1.2" step="0.1" oninput="updateGameSettings()">
+                </div>
+                <div class="section-label" style="margin-top: 10px;">Deep Optimization</div>
+                <button id="btn-compat-mode" onclick="toggleCompatibilityMode()" style="border-left: 4px solid #f1c40f;">
+                    Compatibility Mode: <span id="compat-status">OFF</span>
+                </button>
+                <div class="instruction" style="border-left-color: #f1c40f; margin-top:5px;">
+                    Reduces physics precision to boost FPS, and improves overall performance. <b>Requires Restart.</b>
                 </div>
             </div>
 
@@ -498,6 +505,7 @@
         let sceneRef = null;
         let viewTargetMesh = null;
         let throwForce = 50; 
+        const isCompatibilityMode = localStorage.getItem("sb3d_compat") === "true";
         
         let customModelTemplate = null; 
 
@@ -548,6 +556,26 @@
                 document.exitPointerLock();
             } else {
                 canvas.requestPointerLock();
+            }
+        }
+
+        setTimeout(() => {
+            const statusSpan = document.getElementById("compat-status");
+            const btn = document.getElementById("btn-compat-mode");
+            if (statusSpan) {
+                statusSpan.innerText = isCompatibilityMode ? "ON" : "OFF";
+                if (isCompatibilityMode) {
+                    btn.style.background = "#635a2d";
+                    btn.classList.add('active');
+                }
+            }
+        }, 100);
+
+        function toggleCompatibilityMode() {
+            // Confirm before reloading because they will lose their build
+            if (confirm("Game must restart to apply deep optimizations. Current progress will be lost. Continue?")) {
+                localStorage.setItem("sb3d_compat", !isCompatibilityMode);
+                location.reload();
             }
         }
 
@@ -684,8 +712,6 @@
                 // 3. Apply to Engine (Shaman Logic)
                 const sb3d = workshop.shaman.sandbox3d;
                 if (sb3d.engine && sb3d.cameraFree) {
-                    // Apply Resolution Scaling
-                    sb3d.engine.setHardwareScalingLevel(1 / (resScale / 100));
 
                     // Apply View Distance (Far Clip Plane)
                     sb3d.cameraFree.maxZ = parseFloat(viewDist);
@@ -877,6 +903,8 @@
                     engine: null,
                     scene: null,
                     cameraFree: null,
+                    cullingFrameCount: 0,
+                    cullingRate: 10,
 
                     init: function() {
                         this.engine = new BABYLON.Engine(this.canvas, true);
@@ -885,6 +913,19 @@
 
                         this.engine.runRenderLoop(() => {
                             const now = performance.now();
+
+                            this.cullingFrameCount++;
+                            if (this.cullingFrameCount > this.cullingRate) {
+                                this.cullingFrameCount = 0;
+                                this.handleDistanceCulling();
+                            }
+
+                            if (isCompatibilityMode) {
+                                this.cullingRate = 30; // Check distance only every 30 frames
+                            } else {
+                                this.engine.setHardwareScalingLevel(1.0);
+                                this.cullingRate = 10;
+                            }
 
                             // If Unlimited, skip the math and just render
                             if (targetFPS === 0) {
@@ -962,6 +1003,39 @@
                                     if(mesh === viewTargetMesh) toggleViewMode();
                                     mesh.dispose();
                                     spawnedMeshes.splice(i, 1);
+                                }
+                            }
+                        }
+                    },
+
+                    handleDistanceCulling: function () {
+                        if (!this.cameraFree) return;
+
+                        // 1. Get the current limit from the camera (set by your slider)
+                        const camPos = this.cameraFree.position;
+                        const viewLimit = this.cameraFree.maxZ;
+                        const viewLimitSq = viewLimit * viewLimit; // Compare squared numbers (faster for CPU)
+
+                        // 2. Iterate through all dynamic objects
+                        for (let i = 0; i < spawnedMeshes.length; i++) {
+                            const mesh = spawnedMeshes[i];
+                            if (!mesh || mesh.isDisposed()) continue;
+
+                            // 3. Calculate Distance
+                            // We use lengthSquared() because Math.sqrt() is expensive
+                            const distSq = mesh.position.subtract(camPos).lengthSquared();
+
+                            if (distSq > viewLimitSq) {
+                                // --- TOO FAR ---
+                                if (mesh.isEnabled()) {
+                                    mesh.setEnabled(false); // Stop Rendering
+                                    if (mesh.physicsImpostor) mesh.physicsImpostor.sleep(); // Stop Physics
+                                }
+                            } else {
+                                // --- CLOSE ENOUGH ---
+                                if (!mesh.isEnabled()) {
+                                    mesh.setEnabled(true); // Start Rendering
+                                    if (mesh.physicsImpostor) mesh.physicsImpostor.wakeUp(); // Resume Physics
                                 }
                             }
                         }
@@ -1446,7 +1520,7 @@
                     },
 
                     spawnFragments: function (center, scene) {
-                        const numFrags = 20;
+                        const numFrags = isCompatibilityMode ? 5 : 20;
                         for (let i = 0; i < numFrags; i++) {
                             const frag = BABYLON.MeshBuilder.CreateBox("frag", { size: 0.5 }, scene);
                             frag.position = center.clone();
