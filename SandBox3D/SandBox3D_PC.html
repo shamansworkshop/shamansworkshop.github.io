@@ -296,6 +296,39 @@
         <source src="./asset/bomboclat.mp3" type="audio/mpeg">
     </audio>
 
+    <div id="audio-preload-layer" style="display: none;">
+        <audio id="snd_neu1" preload="auto">
+            <source src="./asset/neutral/neu1.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_neu2" preload="auto">
+            <source src="./asset/neutral/neu2.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_neu3" preload="auto">
+            <source src="./asset/neutral/neu3.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_eve1" preload="auto">
+            <source src="./asset/evening/eve1.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_eve2" preload="auto">
+            <source src="./asset/evening/eve2.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_eve3" preload="auto">
+            <source src="./asset/evening/eve3.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_mid1" preload="auto">
+            <source src="./asset/midnight/mid1.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_mid2" preload="auto">
+            <source src="./asset/midnight/mid2.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_mid3" preload="auto">
+            <source src="./asset/midnight/mid3.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="snd_mid4" preload="auto">
+            <source src="./asset/midnight/mid4.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
     <div id="crosshair"></div>
 
     <div id="hud-container">
@@ -1491,22 +1524,9 @@
             sceneRef: null,
 
             library: {
-                neutral: [
-                    "./asset/neutral/neu1.mp3",
-                    "./asset/neutral/neu2.mp3",
-                    "./asset/neutral/neu3.mp3"
-                ],
-                evening: [
-                    "./asset/evening/eve1.mp3",
-                    "./asset/evening/eve2.mp3",
-                    "./asset/evening/eve3.mp3"
-                ],
-                midnight: [
-                    "./asset/midnight/mid1.mp3",
-                    "./asset/midnight/mid2.mp3",
-                    "./asset/midnight/mid3.mp3",
-                    "./asset/midnight/mid4.mp3"
-                ]
+                neutral: ["snd_neu1", "snd_neu2", "snd_neu3"],
+                evening: ["snd_eve1", "snd_eve2", "snd_eve3"],
+                midnight: ["snd_mid1", "snd_mid2", "snd_mid3", "snd_mid4"]
             },
 
             init: function (scene) {
@@ -1515,17 +1535,25 @@
 
             toggle: function () {
                 this.enabled = !this.enabled;
+
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+
                 if (this.enabled) {
                     this.scheduleNext();
+                    return true;
                 } else {
-                    if (this.timer) clearTimeout(this.timer);
                     if (this.activeSound) {
-                        this.activeSound.stop();
-                        this.activeSound.dispose();
+                        if (this.activeSound.pause) {
+                            this.activeSound.pause();
+                            this.activeSound.currentTime = 0;
+                        }
                         this.activeSound = null;
                     }
+                    return false;
                 }
-                return this.enabled;
             },
 
             scheduleNext: function () {
@@ -1541,7 +1569,7 @@
             },
 
             playMoment: function () {
-                if (!this.enabled || !this.sceneRef) return;
+                if (!this.enabled) return;
 
                 const hour = new Date().getHours();
                 let mode = 'neutral';
@@ -1555,63 +1583,36 @@
                     return;
                 }
 
-                const randomClip = clips[Math.floor(Math.random() * clips.length)];
-                const isSpatial = (mode === 'midnight');
+                const randomClipId = clips[Math.floor(Math.random() * clips.length)];
 
-                if (isSpatial) {
-                    this.spawnSpatialAudio(randomClip);
-                } else {
-                    this.spawnFlatAudio(randomClip);
+                this.spawnFlatAudio(randomClipId);
+            },
+
+            spawnFlatAudio: function (elementId) {
+                const audioEl = document.getElementById(elementId);
+
+                if (!audioEl) {
+                    console.warn("Audio element not found:", elementId);
+                    this.scheduleNext();
+                    return;
                 }
-            },
 
-            spawnFlatAudio: function (url) {
-                const sfx = new BABYLON.Sound("Ambient_" + Date.now(), url, this.sceneRef, () => {
-                    sfx.play();
-                }, {
-                    volume: 0.5,
-                    spatialSound: false
-                });
+                this.activeSound = audioEl;
+                audioEl.currentTime = 0;
+                audioEl.volume = 0.5;
 
-                sfx.onEndedObservable.add(() => {
-                    sfx.dispose();
-                    this.scheduleNext();
-                });
+                const playPromise = audioEl.play();
 
-                this.activeSound = sfx;
-            },
-
-            spawnSpatialAudio: function (url) {
-                const cam = workshop.shaman.sandbox3d.cameraFree;
-                if (!cam) return;
-
-                const dist = 20 + Math.random() * 30;
-                const angle = Math.random() * Math.PI * 2;
-                const x = cam.position.x + Math.cos(angle) * dist;
-                const z = cam.position.z + Math.sin(angle) * dist;
-                const y = cam.position.y + (Math.random() * 10 - 5);
-
-                const ghostMesh = BABYLON.MeshBuilder.CreateBox("audioGhost", { size: 0.5 }, this.sceneRef);
-                ghostMesh.position = new BABYLON.Vector3(x, y, z);
-                ghostMesh.isVisible = false;
-
-                const sfx = new BABYLON.Sound("Spatial_" + Date.now(), url, this.sceneRef, () => {
-                    sfx.play();
-                }, {
-                    spatialSound: true,
-                    maxDistance: 100,
-                    volume: 0.8
-                });
-
-                sfx.attachToMesh(ghostMesh);
-
-                sfx.onEndedObservable.add(() => {
-                    sfx.dispose();
-                    ghostMesh.dispose();
-                    this.scheduleNext();
-                });
-
-                this.activeSound = sfx;
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audioEl.onended = () => {
+                            this.scheduleNext();
+                        };
+                    }).catch(error => {
+                        console.log("Autoplay prevented or interrupted:", error);
+                        this.scheduleNext();
+                    });
+                }
             }
         };
 
