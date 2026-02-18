@@ -1543,7 +1543,6 @@
                 } else {
                     console.log("[Ambience] System DEACTIVATED.");
                     if (this.activeSound) {
-                        console.log(`[Ambience] Stopping active sound: ${this.activeSound.id}`);
                         this.activeSound.pause();
                         this.activeSound.currentTime = 0;
                         this.activeSound = null;
@@ -1555,17 +1554,55 @@
             scheduleNext: function () {
                 if (!this.enabled) return;
 
-                const minTime = 180000;
-                const maxTime = 300000;
+                const hour = new Date().getHours();
+                
+                let minTime = 180000; 
+                let maxTime = 300000;
+
+                if (hour >= 0 && hour < 6) {
+                    minTime = 60000; 
+                    maxTime = 120000;
+                }
+
                 const delay = Math.floor(Math.random() * (maxTime - minTime + 1) + minTime);
                 const delaySeconds = (delay / 1000).toFixed(1);
 
-                console.log(`[Ambience] Cycle complete. Sleeping for ${delaySeconds} seconds (${(delaySeconds/60).toFixed(2)} mins)...`);
+                console.log(`[Ambience] Cycle complete. Sleeping for ${delaySeconds} seconds...`);
 
                 this.timer = setTimeout(() => {
                     console.log("[Ambience] Waking up. It is time.");
                     this.playMoment();
                 }, delay);
+            },
+
+            triggerJumpscare: function() {
+                const layer = document.getElementById('flash-layer');
+                const video = document.getElementById('flash-meme-vid');
+                if (!layer || !video) return;
+
+                layer.style.transition = 'none';
+                layer.style.backgroundColor = 'transparent'; 
+                layer.style.opacity = '1';
+
+                video.currentTime = 0;
+                video.muted = false;
+                video.volume = 1.0;
+                video.style.display = 'block';
+
+                video.play().catch(e => {
+                    console.error("Jumpscare blocked! User must interact with document first.", e);
+                });
+
+                setTimeout(() => {
+                    layer.style.transition = 'opacity 1.5s ease-out';
+                    layer.style.opacity = '0';
+                }, 3700);
+
+                setTimeout(() => {
+                    video.pause();
+                    video.style.display = 'none';
+                    this.scheduleNext();
+                }, 5250);
             },
 
             playMoment: function () {
@@ -1579,17 +1616,22 @@
 
                 console.log(`[Ambience] Time Check | Hour: ${hour} | Mode: ${mode.toUpperCase()}`);
 
+                if (mode === 'midnight') {
+                    if (Math.random() < 0.10) {
+                        console.log("[Ambience] ⚠️ MIDNIGHT EVENT TRIGGERED ⚠️");
+                        this.triggerJumpscare();
+                        return;
+                    }
+                }
+
                 const clips = this.library[mode];
                 
                 if (!clips || clips.length === 0) {
-                    console.warn(`[Ambience] No clips found for mode: ${mode}. Rescheduling.`);
                     this.scheduleNext();
                     return;
                 }
 
                 const randomClipId = clips[Math.floor(Math.random() * clips.length)];
-                console.log(`[Ambience] Selected clip: ${randomClipId}`);
-                
                 this.spawnFlatAudio(randomClipId);
             },
 
@@ -1597,7 +1639,6 @@
                 const audioEl = document.getElementById(elementId);
 
                 if (!audioEl) {
-                    console.error(`[Ambience] CRITICAL: DOM Element ${elementId} missing!`);
                     this.scheduleNext();
                     return;
                 }
@@ -1606,20 +1647,15 @@
                 audioEl.currentTime = 0;
                 audioEl.volume = 0.5;
 
-                console.log(`[Ambience] Attempting playback of ${elementId}...`);
-
                 const playPromise = audioEl.play();
 
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
-                        console.log("[Ambience] Playback STARTED successfully.");
                         audioEl.onended = () => {
-                            console.log("[Ambience] Audio FINISHED naturally. Requesting next cycle.");
                             this.scheduleNext();
                         };
                     }).catch(error => {
-                        console.warn("[Ambience] Playback BLOCKED or FAILED:", error);
-                        console.log("[Ambience] Retrying schedule due to error...");
+                        console.warn("[Ambience] Playback failed:", error);
                         this.scheduleNext();
                     });
                 }
