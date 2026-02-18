@@ -314,44 +314,44 @@
     <div id="flash-layer">
         <video id="flash-meme-vid" playsinline preload="auto"
             style="width:100%; height:100%; object-fit:fill; display:none;">
-            <source src="./asset/gahdayum.mp4" type="video/mp4">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/gahdayum.mp4" type="video/mp4">
         </video>
     </div>
 
     <audio id="explosion-snd" preload="auto">
-        <source src="./asset/bomboclat.mp3" type="audio/mpeg">
+        <source src="https://hexonlabs.github.io/SandBox3D/asset/bomboclat.mp3" type="audio/mpeg">
     </audio>
 
     <div id="audio-preload-layer" style="display: none;">
         <audio id="snd_neu1" preload="auto">
-            <source src="./asset/neutral/neu1.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/neutral/neu1.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_neu2" preload="auto">
-            <source src="./asset/neutral/neu2.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/neutral/neu2.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_neu3" preload="auto">
-            <source src="./asset/neutral/neu3.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/neutral/neu3.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_eve1" preload="auto">
-            <source src="./asset/evening/eve1.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/evening/eve1.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_eve2" preload="auto">
-            <source src="./asset/evening/eve2.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/evening/eve2.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_eve3" preload="auto">
-            <source src="./asset/evening/eve3.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/evening/eve3.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_mid1" preload="auto">
-            <source src="./asset/midnight/mid1.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/midnight/mid1.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_mid2" preload="auto">
-            <source src="./asset/midnight/mid2.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/midnight/mid2.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_mid3" preload="auto">
-            <source src="./asset/midnight/mid3.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/midnight/mid3.mp3" type="audio/mpeg">
         </audio>
         <audio id="snd_mid4" preload="auto">
-            <source src="./asset/midnight/mid4.mp3" type="audio/mpeg">
+            <source src="https://hexonlabs.github.io/SandBox3D/asset/midnight/mid4.mp3" type="audio/mpeg">
         </audio>
     </div>
 
@@ -1524,27 +1524,28 @@
 
             init: function (scene) {
                 this.sceneRef = scene;
+                console.log("[Ambience] System initialized. Ready to toggle.");
             },
 
             toggle: function () {
                 this.enabled = !this.enabled;
 
                 if (this.timer) {
+                    console.log("[Ambience] Clearing pending schedule...");
                     clearTimeout(this.timer);
                     this.timer = null;
                 }
 
                 if (this.enabled) {
-                    console.log("Temporal Ambience: ON");
-                    this.playMoment();
+                    console.log("[Ambience] System ACTIVATED. Triggering initial sound...");
+                    this.playMoment(); 
                     return true;
                 } else {
-                    console.log("Temporal Ambience: OFF");
+                    console.log("[Ambience] System DEACTIVATED.");
                     if (this.activeSound) {
-                        if (this.activeSound.pause) {
-                            this.activeSound.pause();
-                            this.activeSound.currentTime = 0;
-                        }
+                        console.log(`[Ambience] Stopping active sound: ${this.activeSound.id}`);
+                        this.activeSound.pause();
+                        this.activeSound.currentTime = 0;
                         this.activeSound = null;
                     }
                     return false;
@@ -1554,13 +1555,15 @@
             scheduleNext: function () {
                 if (!this.enabled) return;
 
-                const minTime = 300000;
-                const maxTime = 600000;
+                const minTime = 180000;
+                const maxTime = 300000;
                 const delay = Math.floor(Math.random() * (maxTime - minTime + 1) + minTime);
+                const delaySeconds = (delay / 1000).toFixed(1);
 
-                console.log(`Next ambience scheduled in ${Math.floor(delay / 1000)}s`);
+                console.log(`[Ambience] Cycle complete. Sleeping for ${delaySeconds} seconds (${(delaySeconds/60).toFixed(2)} mins)...`);
 
                 this.timer = setTimeout(() => {
+                    console.log("[Ambience] Waking up. It is time.");
                     this.playMoment();
                 }, delay);
             },
@@ -1574,13 +1577,19 @@
                 if (hour >= 17 && hour <= 23) mode = 'evening';
                 else if (hour >= 0 && hour < 6) mode = 'midnight';
 
+                console.log(`[Ambience] Time Check | Hour: ${hour} | Mode: ${mode.toUpperCase()}`);
+
                 const clips = this.library[mode];
+                
                 if (!clips || clips.length === 0) {
+                    console.warn(`[Ambience] No clips found for mode: ${mode}. Rescheduling.`);
                     this.scheduleNext();
                     return;
                 }
 
                 const randomClipId = clips[Math.floor(Math.random() * clips.length)];
+                console.log(`[Ambience] Selected clip: ${randomClipId}`);
+                
                 this.spawnFlatAudio(randomClipId);
             },
 
@@ -1588,28 +1597,29 @@
                 const audioEl = document.getElementById(elementId);
 
                 if (!audioEl) {
-                    console.error("Audio element missing in HTML:", elementId);
+                    console.error(`[Ambience] CRITICAL: DOM Element ${elementId} missing!`);
                     this.scheduleNext();
                     return;
-                }
-
-                if (audioEl.readyState === 0 && audioEl.networkState === 3) {
-                    console.warn(`Audio file missing/404: ${audioEl.currentSrc || elementId}`);
                 }
 
                 this.activeSound = audioEl;
                 audioEl.currentTime = 0;
                 audioEl.volume = 0.5;
 
+                console.log(`[Ambience] Attempting playback of ${elementId}...`);
+
                 const playPromise = audioEl.play();
 
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
+                        console.log("[Ambience] Playback STARTED successfully.");
                         audioEl.onended = () => {
+                            console.log("[Ambience] Audio FINISHED naturally. Requesting next cycle.");
                             this.scheduleNext();
                         };
                     }).catch(error => {
-                        console.warn("Audio playback failed (File missing or Autoplay blocked):", error);
+                        console.warn("[Ambience] Playback BLOCKED or FAILED:", error);
+                        console.log("[Ambience] Retrying schedule due to error...");
                         this.scheduleNext();
                     });
                 }
