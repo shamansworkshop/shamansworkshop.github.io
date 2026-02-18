@@ -1535,9 +1535,11 @@
                 }
 
                 if (this.enabled) {
-                    this.scheduleNext();
+                    console.log("Temporal Ambience: ON");
+                    this.playMoment();
                     return true;
                 } else {
+                    console.log("Temporal Ambience: OFF");
                     if (this.activeSound) {
                         if (this.activeSound.pause) {
                             this.activeSound.pause();
@@ -1555,6 +1557,8 @@
                 const minTime = 300000;
                 const maxTime = 600000;
                 const delay = Math.floor(Math.random() * (maxTime - minTime + 1) + minTime);
+
+                console.log(`Next ambience scheduled in ${Math.floor(delay / 1000)}s`);
 
                 this.timer = setTimeout(() => {
                     this.playMoment();
@@ -1577,7 +1581,6 @@
                 }
 
                 const randomClipId = clips[Math.floor(Math.random() * clips.length)];
-
                 this.spawnFlatAudio(randomClipId);
             },
 
@@ -1585,9 +1588,13 @@
                 const audioEl = document.getElementById(elementId);
 
                 if (!audioEl) {
-                    console.warn("Audio element not found:", elementId);
+                    console.error("Audio element missing in HTML:", elementId);
                     this.scheduleNext();
                     return;
+                }
+
+                if (audioEl.readyState === 0 && audioEl.networkState === 3) {
+                    console.warn(`Audio file missing/404: ${audioEl.currentSrc || elementId}`);
                 }
 
                 this.activeSound = audioEl;
@@ -1602,7 +1609,7 @@
                             this.scheduleNext();
                         };
                     }).catch(error => {
-                        console.log("Autoplay prevented or interrupted:", error);
+                        console.warn("Audio playback failed (File missing or Autoplay blocked):", error);
                         this.scheduleNext();
                     });
                 }
