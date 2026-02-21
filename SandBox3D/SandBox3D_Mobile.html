@@ -1020,63 +1020,92 @@
                     init: async function () {
                         const useWebGPU = localStorage.getItem('sb3d_use_webgpu') === 'true';
 
-                        if (useWebGPU && navigator.gpu) {
-                            this.engine = new BABYLON.WebGPUEngine(this.canvas);
-                            await this.engine.initAsync();
-                        } else {
-                            if (useWebGPU && !navigator.gpu) {
-                                console.warn("WebGPU not supported on this browser. Falling back to WebGL.");
-                                localStorage.setItem('sb3d_use_webgpu', 'false');
-                                updateWebGPUButtonState();
+                        if (useWebGPU) {
+                            let webGpuFailed = false;
+
+                            if (navigator.gpu) {
+                                try {
+                                    const adapter = await navigator.gpu.requestAdapter();
+                                    if (!adapter) throw new Error("Adapter is null");
+
+                                    this.engine = new BABYLON.WebGPUEngine(this.canvas);
+                                    await this.engine.initAsync();
+
+                                    this.engine.onContextLostObservable.add(() => {
+                                        if (confirm("WebGPU context crashed! Safely reboot into WebGL2?\n\n(Click 'Cancel' to stay in the void)")) {
+                                            localStorage.setItem('sb3d_use_webgpu', 'false');
+                                            window.location.reload();
+                                        }
+                                    });
+                                } catch (e) {
+                                    webGpuFailed = true;
+                                }
+                            } else {
+                                webGpuFailed = true;
                             }
+
+                            if (webGpuFailed) {
+                                const fallback = confirm("WebGPU is not supported or failed to initialize on this device.\n\nSwitch to the stable WebGL2 engine?\n(Cancel will leave WebGPU enabled in settings, but the screen will stay black)");
+
+                                if (fallback) {
+                                    localStorage.setItem('sb3d_use_webgpu', 'false');
+                                    updateWebGPUButtonState();
+                                    this.engine = new BABYLON.Engine(this.canvas, true);
+                                } else {
+                                    return;
+                                }
+                            }
+                        } else {
                             this.engine = new BABYLON.Engine(this.canvas, true);
                         }
 
-                        this.scene = this.createScene();
-                        sceneRef = this.scene;
-                        workshop.shaman.sandbox3d.TemporalAudio.init(this.scene);
+                        if (this.engine) {
+                            this.scene = this.createScene();
+                            sceneRef = this.scene;
+                            workshop.shaman.sandbox3d.TemporalAudio.init(this.scene);
 
-                        const fpsDiv = document.getElementById("fps-render");
-                        const physDiv = document.getElementById("fps-phys");
+                            const fpsDiv = document.getElementById("fps-render");
+                            const physDiv = document.getElementById("fps-phys");
 
-                        this.engine.runRenderLoop(() => {
-                            const now = performance.now();
+                            this.engine.runRenderLoop(() => {
+                                const now = performance.now();
 
-                            this.cullingFrameCount++;
-                            if (this.cullingFrameCount > this.cullingRate) {
-                                this.cullingFrameCount = 0;
-                                this.handleDistanceCulling();
-                            }
+                                this.cullingFrameCount++;
+                                if (this.cullingFrameCount > this.cullingRate) {
+                                    this.cullingFrameCount = 0;
+                                    this.handleDistanceCulling();
+                                }
 
-                            const currentFPS = this.engine.getFps();
+                                const currentFPS = this.engine.getFps();
 
-                            if (fpsDiv) {
-                                fpsDiv.innerText = "FPS: " + currentFPS.toFixed(0);
-                            }
+                                if (fpsDiv) {
+                                    fpsDiv.innerText = "FPS: " + currentFPS.toFixed(0);
+                                }
 
-                            if (physDiv) {
-                                physDiv.innerText = "PHYS: " + currentFPS.toFixed(0);
-                            }
+                                if (physDiv) {
+                                    physDiv.innerText = "PHYS: " + currentFPS.toFixed(0);
+                                }
 
-                            if (targetFPS === 0) {
-                                this.handleKillZone();
-                                this.handleInput();
-                                this.scene.render();
-                                return;
-                            }
+                                if (targetFPS === 0) {
+                                    this.handleKillZone();
+                                    this.handleInput();
+                                    this.scene.render();
+                                    return;
+                                }
 
-                            const delta = now - lastFrameTime;
-                            const interval = 1000 / targetFPS;
+                                const delta = now - lastFrameTime;
+                                const interval = 1000 / targetFPS;
 
-                            if (delta >= interval) {
-                                lastFrameTime = now - (delta % interval);
-                                this.handleKillZone();
-                                this.handleInput();
-                                this.scene.render();
-                            }
-                        });
+                                if (delta >= interval) {
+                                    lastFrameTime = now - (delta % interval);
+                                    this.handleKillZone();
+                                    this.handleInput();
+                                    this.scene.render();
+                                }
+                            });
 
-                        window.addEventListener("resize", () => { this.engine.resize(); });
+                            window.addEventListener("resize", () => { this.engine.resize(); });
+                        }
                     },
 
                     createScene: function() {
