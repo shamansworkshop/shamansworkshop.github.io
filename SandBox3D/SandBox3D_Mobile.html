@@ -620,6 +620,11 @@
         }
 
         function triggerUpload() {
+            const engine = workshop.shaman.sandbox3d.engine;
+            if (engine && (engine.isWebGPU || engine instanceof BABYLON.WebGPUEngine)) {
+                alert("Custom 3D model uploads are disabled in WebGPU mode to prevent Context Lost crashes.\n\nPlease switch to WebGL in Game Settings to use this feature.");
+                return;
+            }
             document.getElementById('file-input').click();
         }
 
@@ -1064,6 +1069,15 @@
                             sceneRef = this.scene;
                             workshop.shaman.sandbox3d.TemporalAudio.init(this.scene);
 
+                            if (this.engine.isWebGPU || this.engine instanceof BABYLON.WebGPUEngine) {
+                                const uploadBtn = document.getElementById('btn-upload');
+                                if (uploadBtn) {
+                                    uploadBtn.style.opacity = '0.4';
+                                    uploadBtn.style.cursor = 'not-allowed';
+                                    uploadBtn.innerHTML = '<span class="shape-icon icon-upload"></span> Locked (WebGL Only)';
+                                }
+                            }
+
                             const fpsDiv = document.getElementById("fps-render");
                             const physDiv = document.getElementById("fps-phys");
 
@@ -1351,7 +1365,12 @@
                         const spawnPos = pickInfo.pickedPoint.add(normal.scale(pivotOffset));
 
                         if (type === 'custom' && customModelTemplate) {
-                            mesh = customModelTemplate.mesh.clone("customInstance_" + Date.now());
+                            mesh = customModelTemplate.mesh.instantiateHierarchy(null, { doNotInstantiate: true });
+                            mesh.name = "customInstance_" + Date.now();
+
+                            mesh.alwaysSelectAsActiveMesh = false;
+                            mesh.getChildMeshes().forEach(c => c.alwaysSelectAsActiveMesh = false);
+
                             mesh.setEnabled(true);
                             mesh.scaling = new BABYLON.Vector3(scale, scale, scale);
                             const customOffset = (customModelTemplate.dimensions.height * scale) / 2;
